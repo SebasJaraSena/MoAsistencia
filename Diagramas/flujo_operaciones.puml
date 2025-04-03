@@ -1,0 +1,82 @@
+@startuml "Flujo de Operaciones - Sistema de Asistencia"
+
+skinparam sequence {
+    ArrowColor #666666
+    ActorBorderColor #666666
+    LifeLineBorderColor #666666
+    ParticipantBorderColor #666666
+    ParticipantBackgroundColor #EEEEEE
+}
+
+actor Usuario
+participant "local_asistencia_external" as External
+participant "fetch_students" as Students
+participant "fetch_activities" as Activities
+participant "foreing_db_connection" as DB
+participant "edit" as Edit
+participant "report_downloader" as Reports
+participant "detailed_report_downloader" as DetailedReports
+
+' Flujo de obtención de estudiantes
+Usuario -> External: fetch_students()
+activate External
+External -> DB: query()
+activate DB
+DB --> External: resultado
+deactivate DB
+External -> Students: fetch_students()
+activate Students
+Students --> External: array estudiantes
+deactivate Students
+External --> Usuario: array estudiantes
+deactivate External
+
+' Flujo de reportes de asistencia
+Usuario -> External: fetch_attendance_report()
+activate External
+External -> Activities: fetch_attendance_report()
+activate Activities
+Activities --> External: reporte
+deactivate Activities
+External --> Usuario: reporte
+deactivate External
+
+' Flujo de edición
+Usuario -> External: edit()
+activate External
+External -> Edit: definition()
+activate Edit
+Edit --> External
+deactivate Edit
+External -> Edit: filters()
+activate Edit
+Edit --> External
+deactivate Edit
+External -> Edit: dbConfiguration()
+activate Edit
+Edit --> External
+deactivate Edit
+External --> Usuario
+deactivate External
+
+' Flujo de generación de reportes detallados
+Usuario -> External: attendance_detailed_report()
+activate External
+External -> DetailedReports: generate_report_pdf()
+activate DetailedReports
+DetailedReports --> External
+deactivate DetailedReports
+External --> Usuario
+deactivate External
+
+' Flujo de validación de cierre
+Usuario -> External: close_validation()
+activate External
+External -> Students: close_validation()
+activate Students
+Students --> External: resultado
+deactivate Students
+External --> Usuario: resultado
+deactivate External
+
+@enduml 

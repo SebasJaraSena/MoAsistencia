@@ -1,0 +1,137 @@
+@startuml
+top to bottom direction
+
+
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 100
+skinparam actorStyle awesome
+
+actor Super_Admin
+actor Admin_Usuarios
+actor Admin_Auditorias
+actor Admin_Archivos
+actor Ver_Archivos
+
+package "Funciones Generales" {
+    usecase "Dashboard" as UC_Dashboard
+    usecase "Iniciar Sesión" as UC_Iniciar_Sesion
+    usecase "Cerrar sesión" as UC_Cerrar_Sesion
+    usecase "Cambiar nombre" as UC_Cambiar_Nombre
+    usecase "Actualizar credenciales" as UC_Actualizar_Credenciales
+    usecase "Cerrar sesión de navegador" as UC_Cerrar_Sesion_Nav
+    usecase "Cambiar correo" as UC_Cambiar_Correo
+}
+
+package "Admin Usuarios" {
+    usecase "Crear usuario" as UC_Crear_Usuario
+    usecase "Editar usuario" as UC_Editar_Usuario
+    usecase "Crear rol" as UC_Crear_Rol
+    usecase "Editar rol" as UC_Editar_Rol
+    usecase "Administrar permisos" as UC_Admin_Permisos
+    usecase "Bloquear usuario" as UC_Bloquear_Usuario
+}
+
+package "Admin Auditorías" {
+    usecase "Ver auditorías" as UC_Ver_Auditorias
+    usecase "Filtrar auditorías" as UC_Filtrar_Auditorias
+    usecase "Exportar informe auditorías" as UC_Exportar_Informe_Auditorias
+    usecase "Ver informe sensibles" as UC_Ver_Informe_Sensibles
+    usecase "Filtrar informe sensibles" as UC_Filtrar_Informe_Sensibles
+    usecase "Exportar info archivos comprimidos" as UC_Exportar_Info_Comprimidos
+    usecase "Filtrar info archivos comprimidos" as UC_Filtrar_Info_Comprimidos
+}
+
+package "Admin Archivos" {
+    usecase "Subir archivo" as UC_Subir_Archivo
+    usecase "Descargar archivos" as UC_Descargar_Archivos
+    usecase "Cambiar nombre archivos" as UC_Cambiar_Nombre_Archivos
+    usecase "Copiar archivo" as UC_Copiar_Archivo
+    usecase "Mover archivo" as UC_Mover_Archivo
+    usecase "Descomprimir archivo" as UC_Descomprimir_Archivo
+    usecase "Administrar versiones" as UC_Admin_Versiones
+    usecase "Editar metadata" as UC_Editar_Metadata
+    usecase "Crear directorio" as UC_Crear_Directorio
+    usecase "Cambiar nombre directorio" as UC_Cambiar_Nombre_Directorio
+    usecase "Descargar directorios" as UC_Descargar_Directorios
+    usecase "Insertar metadata" as UC_Insertar_Metadata
+}
+
+package "Ver Archivos" {
+    usecase "Ver archivos" as UC_Ver_Archivos
+    usecase "Copiar enlace" as UC_Copiar_Enlace
+}
+
+' Relación de Super_Admin en naranja
+Super_Admin -[#FF5733]-> UC_Dashboard
+Super_Admin -[#FF5733]-> UC_Iniciar_Sesion
+Super_Admin -[#FF5733]-> UC_Cerrar_Sesion
+Super_Admin -[#FF5733]-> UC_Cambiar_Nombre
+Super_Admin -[#FF5733]-> UC_Actualizar_Credenciales
+Super_Admin -[#FF5733]-> UC_Cerrar_Sesion_Nav
+Super_Admin -[#FF5733]-> UC_Cambiar_Correo
+
+' Relación de Admin_Usuarios en azul
+Admin_Usuarios -[#2980B9]-> UC_Dashboard
+Admin_Usuarios -[#2980B9]-> UC_Iniciar_Sesion
+Admin_Usuarios -[#2980B9]-> UC_Cerrar_Sesion
+Admin_Usuarios -[#2980B9]-> UC_Cambiar_Nombre
+Admin_Usuarios -[#2980B9]-> UC_Actualizar_Credenciales
+Admin_Usuarios -[#2980B9]-> UC_Cerrar_Sesion_Nav
+Admin_Usuarios -[#2980B9]-> UC_Cambiar_Correo
+Admin_Usuarios -[#2980B9]-> UC_Crear_Usuario
+Admin_Usuarios -[#2980B9]-> UC_Editar_Usuario
+Admin_Usuarios -[#2980B9]-> UC_Crear_Rol
+Admin_Usuarios -[#2980B9]-> UC_Editar_Rol
+Admin_Usuarios -[#2980B9]-> UC_Admin_Permisos
+Admin_Usuarios -[#2980B9]-> UC_Bloquear_Usuario
+
+' Relación de Admin_Auditorias en verde
+Admin_Auditorias -[#27AE60]-> UC_Dashboard
+Admin_Auditorias -[#27AE60]-> UC_Iniciar_Sesion
+Admin_Auditorias -[#27AE60]-> UC_Cerrar_Sesion
+Admin_Auditorias -[#27AE60]-> UC_Cambiar_Nombre
+Admin_Auditorias -[#27AE60]-> UC_Actualizar_Credenciales
+Admin_Auditorias -[#27AE60]-> UC_Cerrar_Sesion_Nav
+Admin_Auditorias -[#27AE60]-> UC_Cambiar_Correo
+Admin_Auditorias -[#27AE60]-> UC_Ver_Auditorias
+Admin_Auditorias -[#27AE60]-> UC_Filtrar_Auditorias
+Admin_Auditorias -[#27AE60]-> UC_Exportar_Informe_Auditorias
+Admin_Auditorias -[#27AE60]-> UC_Ver_Informe_Sensibles
+Admin_Auditorias -[#27AE60]-> UC_Filtrar_Informe_Sensibles
+Admin_Auditorias -[#27AE60]-> UC_Exportar_Info_Comprimidos
+Admin_Auditorias -[#27AE60]-> UC_Filtrar_Info_Comprimidos
+
+' Relación de Admin_Archivos en morado
+Admin_Archivos -[#8E44AD]-> UC_Dashboard
+Admin_Archivos -[#8E44AD]-> UC_Iniciar_Sesion
+Admin_Archivos -[#8E44AD]-> UC_Cerrar_Sesion
+Admin_Archivos -[#8E44AD]-> UC_Cambiar_Nombre
+Admin_Archivos -[#8E44AD]-> UC_Actualizar_Credenciales
+Admin_Archivos -[#8E44AD]-> UC_Cerrar_Sesion_Nav
+Admin_Archivos -[#8E44AD]-> UC_Cambiar_Correo
+Admin_Archivos -[#8E44AD]-> UC_Subir_Archivo
+Admin_Archivos -[#8E44AD]-> UC_Descargar_Archivos
+Admin_Archivos -[#8E44AD]-> UC_Cambiar_Nombre_Archivos
+Admin_Archivos -[#8E44AD]-> UC_Copiar_Archivo
+Admin_Archivos -[#8E44AD]-> UC_Mover_Archivo
+Admin_Archivos -[#8E44AD]-> UC_Descomprimir_Archivo
+Admin_Archivos -[#8E44AD]-> UC_Admin_Versiones
+Admin_Archivos -[#8E44AD]-> UC_Editar_Metadata
+Admin_Archivos -[#8E44AD]-> UC_Crear_Directorio
+Admin_Archivos -[#8E44AD]-> UC_Cambiar_Nombre_Directorio
+Admin_Archivos -[#8E44AD]-> UC_Descargar_Directorios
+Admin_Archivos -[#8E44AD]-> UC_Insertar_Metadata
+
+' Relación de Ver_Archivos en amarillo
+Ver_Archivos -[#F1C40F]-> UC_Dashboard
+Ver_Archivos -[#F1C40F]-> UC_Iniciar_Sesion
+Ver_Archivos -[#F1C40F]-> UC_Cerrar_Sesion
+Ver_Archivos -[#F1C40F]-> UC_Cambiar_Nombre
+Ver_Archivos -[#F1C40F]-> UC_Actualizar_Credenciales
+Ver_Archivos -[#F1C40F]-> UC_Cerrar_Sesion_Nav
+Ver_Archivos -[#F1C40F]-> UC_Cambiar_Correo
+Ver_Archivos -[#F1C40F]-> UC_Ver_Archivos
+Ver_Archivos -[#F1C40F]-> UC_Copiar_Enlace
+
+@enduml
