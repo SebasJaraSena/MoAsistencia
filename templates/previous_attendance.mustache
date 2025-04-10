@@ -1,36 +1,41 @@
 {{!
-    This file is part of Moodle - http://moodle.org/
+This file is part of Moodle - http://moodle.org/
 
-    Moodle is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Moodle is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Moodle is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+Moodle is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License
+along with Moodle. If not, see
+<http: //www.gnu.org/licenses />.
 }}
 {{!
-    @template local_asistencia/manage
+@template local_asistencia/manage
 
 
-    Example context (json):
-    {
-       
-    }
+Example context (json):
+{
+
+}
 }}
 
 
-{{! <h1 class="h1 display-1 text-primary" >Lista de aprendices</h1> }}
+<div class="mx-1">
+<button type="button" class="btn btn-primary"
+                onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">Regresar al
+                menu</button>
+ </div>
 <div class="container ">
-   <div class="row attendance-row">
-            <div class="col-md-auto">
-            <form action="./previous_attendance.php?courseid={{courseid}}&page={{currentpage}}&info=h&range={{range}}" method="POST">
-                
+    <div class="row attendance-row">
+        <div class="col-md-auto">
+            <form action="./previous_attendance.php?courseid={{courseid}}&page={{currentpage}}&info=h&range={{range}}"
+                method="POST">
                 <select class="custom-select" id="weekselect" name="numweeks">
                     <option value="1" {{#1week}}selected{{/1week}}>1 Semana</option>
                     <option value="2" {{#2week}}selected{{/2week}}>2 Semanas</option>
@@ -41,149 +46,145 @@
             </form>
         </div>
     </div>
+   
+    
+ 
+</div>
+<br>
+<form action="./previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}&weeks={{weeks}}"
+    method="POST" id="course_{{courseid}}">
+    <div class="container" style="display: flex; align-items: center; gap: 10px;">
+        <h1 style="margin: 0;">Buscar:</h1>
+        <input type="text" id="searchInput" class="form-control"
+            placeholder="Buscar por documento, apellidos, nombres o correo">
+    </div>
     <br>
-    <div class="row attendance-row">
-        <div class="col-md-auto">
-        <button type="button" class="btn btn-primary" onclick="location.href='/{{dirroot}}/course/view.php?id={{courseid}}'">Volver al curso</button>
-        </div>
-        
-    </div>
-{{#config}}
-    <div class="row">
-        <div class="col-md-auto">
-            <button type="button" class="btn btn-secondary" onclick="location.href='/{{dirroot}}/local/asistencia/activities.php'">Listar actividades</button>
-        </div>
-    </div>
-{{/config}}
-</div>
-<br>
-<form action="./previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}&weeks={{weeks}}" method="POST" id="course_{{courseid}}">
-<div class="container" style="display: flex; align-items: center; gap: 10px;">
-    <h1 style="margin: 0;">Buscar:</h1>
-    <input type="text" id="searchInput" class="form-control" placeholder="Buscar por documento, apellidos, nombres o correo">
-</div>
-<br>
-<div class="container fortable" style="width:auto; overflow-x: auto">
+    <div class="container fortable" style="width:auto; overflow-x: auto">
         <input type="hidden" id="courseid" name="courseid" value="{{courseid}}">
         <input type="hidden" id="teacher_{{id}}" name="teacherid" value="{{teacherid}}">
-    <table class="table table-hover table-container" id="attendance-table">
-       <thead>
-        <tr>
-            <th class="sticky-column">
-                DOCUMENTO
-            </th>
-            <th class="sticky-column">
-                APELLIDOS
-            </th>
-            <th class="sticky-column">
-                NOMBRES
-            </th>
-            <th class="sticky-column">
-                CORREO
-            </th>
-            <th >
-                ESTADO
-            </th>
-           
-            {{#weekheader}}
-                <th>
-                    {{day}}<br>{{date}}
-                </th>
-            {{/weekheader}}
-            
-        </tr>
-          </thead>
-           <tbody>
-        {{#students}}
-            <tr>
-                <td class="sticky-column">
-                    {{username}}
-                </td>
-                <td class="sticky-column">{{lastname}}
-                    <input type="hidden" id="userid_{{id}}" name="userids[]" value="{{id}}">
-                    <input type="hidden" id="statususerid_{{id}}" name="statususerids[]" value="{{status}}">
-                </td>
+        <table class="table table-hover table-container" id="attendance-table">
+            <thead>
+                <tr>
+                    <th class="sticky-column">
+                        DOCUMENTO
+                    </th>
+                    <th class="sticky-column">
+                        APELLIDOS
+                    </th>
+                    <th class="sticky-column">
+                        NOMBRES
+                    </th>
+                    <th class="sticky-column">
+                        CORREO
+                    </th>
+                    <th>
+                        ESTADO
+                    </th>
 
-                <td class="sticky-column">{{firstname}}
-                </td>
+                    {{#weekheader}}
+                    <th>
+                        {{day}}<br>{{date}}
+                    </th>
+                    {{/weekheader}}
 
-                <td class="sticky-column">
-                    {{email}}
-                </td>
-                <td class="{{#status}}alert alert-warning{{/status}}{{^status}}alert alert-success{{/status}}">
-                    {{#status}}SUSPENDIDO{{/status}}
-                    {{^status}}ACTIVO{{/status}}
-                </td>
-          {{#week}}
-<td class="select-container">
-    <input type="hidden" name="date[{{id}}][]" value="{{fulldate}}">
+                </tr>
+            </thead>
+            <tbody>
+                {{#students}}
+                <tr>
+                    <td class="sticky-column">
+                        {{username}}
+                    </td>
+                    <td class="sticky-column">{{lastname}}
+                        <input type="hidden" id="userid_{{id}}" name="userids[]" value="{{id}}">
+                        <input type="hidden" id="statususerid_{{id}}" name="statususerids[]" value="{{status}}">
+                    </td>
 
-    <select name="attendance[{{id}}][{{fulldate}}]" class="custom-select form-select" {{#edit}}disabled{{/edit}}>
-        <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
-        <option value="1" {{#selection.op1}}selected{{/selection.op1}}>A</option>
-        <option value="0" {{#selection.op0}}selected{{/selection.op0}}>I</option>
-        <option value="2" {{#selection.op2}}selected{{/selection.op2}}>R</option>
-        <option value="3" {{#selection.op3}}selected{{/selection.op3}}>EM</option>
-    </select>
+                    <td class="sticky-column">{{firstname}}
+                    </td>
 
-    <div class="input-container">
-        <input type="number" name="extrainfoNum[{{id}}][{{fulldate}}]" class="form-control extra-input"
-            placeholder="Horas" min="1" max="10" value="{{missedhours}}" {{#edit}}readonly{{/edit}}>
-        <textarea name="extrainfo[{{id}}][{{fulldate}}]" class="form-control extra-input"
-            placeholder="Observaciones"
-            style="width: 100%; height: 40px;" {{#edit}}readonly{{/edit}}>{{observations}}</textarea>
+                    <td class="sticky-column">
+                        {{email}}
+                    </td>
+                    <td class="{{#status}}alert alert-warning{{/status}}{{^status}}alert alert-success{{/status}}">
+                        {{#status}}SUSPENDIDO{{/status}}
+                        {{^status}}ACTIVO{{/status}}
+                    </td>
+                    {{#week}}
+                    <td class="select-container">
+                        <input type="hidden" name="date[{{id}}][]" value="{{fulldate}}">
+
+                        <select name="attendance[{{id}}][{{fulldate}}]" class="custom-select form-select"
+                            {{#edit}}disabled{{/edit}}>
+                            <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
+                            <option value="1" {{#selection.op1}}selected{{/selection.op1}}  title="Asistió">A</option>
+                            <option value="0" {{#selection.op0}}selected{{/selection.op0}} title="No asistió">I</option>
+                            <option value="2" {{#selection.op2}}selected{{/selection.op2}} title="Llego tarde">R</option>
+                            <option value="3" {{#selection.op3}}selected{{/selection.op3}} title="Excusa medica">EM</option>
+                        </select>
+
+                        <div class="input-container">
+                            <input type="number" name="extrainfoNum[{{id}}][{{fulldate}}]"
+                                class="form-control extra-input" placeholder="Horas" min="1" max="10"
+                                value="{{missedhours}}" {{#edit}}readonly{{/edit}}>
+                            <textarea name="extrainfo[{{id}}][{{fulldate}}]" class="form-control extra-input"
+                                placeholder="Observaciones" style="width: 100%; height: 40px;"
+                                {{#edit}}readonly{{/edit}}>{{observations}}</textarea>
+                        </div>
+
+                        {{#status}}
+                        <p style="font-size: 0.8em; color: #888; margin-top: 4px;">SUSPENDIDO</p>
+                        {{/status}}
+                    </td>
+                    {{/week}}
+
+
+
+                </tr>
+                {{/students}}
+        </table>
+        <tbody>
+            {{^close}}
+            <input type="hidden" name="close" value="1">
+            <button type="button" id="saveButton" class="btn btn-primary my-button" onclick="location.href='#modal1'"
+                {{#close}}disabled{{/close}}>Guardar</button>
+            {{/close}}
+    </div>
+    <div>
+        <br>
+        <div class="container">
+            {{#listpages}}
+            {{#current}}
+            <button type="button" class="btn btn-secondary"
+                onclick="location.href='/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{page}}&weeks={{weeks}}'"
+                disabled>{{currentpage}}</button>
+            {{/current}}
+            {{^current}}
+
+            <button type="button" class="btn btn-primary"
+                onclick="location.href='/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{page}}weeks={{weeks}}'"
+                {{active}}>{{page}}</button>
+
+            {{/current}}
+            {{/listpages}}
+        </div>
     </div>
 
-    {{#status}}
-        <p style="font-size: 0.8em; color: #888; margin-top: 4px;">SUSPENDIDO</p>
-    {{/status}}
-</td>
-{{/week}}
+    <div id="modal1" class="new-modal">
 
-
-                    
-            </tr>
-        {{/students}}
-    </table>
-     <tbody>
-    {{^close}}
-    {{^closed}}
-        <input type="hidden" name="close" value="1">
-        <button type="button" id="saveButton" class="btn btn-primary my-button" onclick = "location.href='#modal1'" {{#close}}disabled{{/close}}>Guardar</button>
-    {{/closed}}
-    {{/close}}
-</div>
-<div>
-    <br>
-    <div class="container">
-    {{#listpages}}
-        {{#current}}
-            <button type="button" class="btn btn-secondary" onclick="location.href='/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{page}}&weeks={{weeks}}'" disabled>{{currentpage}}</button>
-        {{/current}}
-        {{^current}}
-        
-            <button type="button" class="btn btn-primary" onclick="location.href='/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{page}}weeks={{weeks}}'" {{active}}>{{page}}</button>
-        
-        {{/current}}
-    {{/listpages}}
-    </div>
-</div>
-
-<div id="modal1" class="new-modal">
-    
         <div class="card floating-card ">
             <div class="card-body">
                 <h2 class="card-title">¿Estás seguro de que deseas cerrar la asistencia?</h2>
                 <h3 class="card-subtitle">Al cerrar la asistencia no se podrá modificar los valores diligenciados.</h3>
                 <br>
                 <div class="d-flex justify-content-between">
-                
+
                     <button id="confirmAtt" type="button" class="btn btn-primary">Confirmar</button>
-                    <button id="cancelAtt" type="button" class="btn btn-secondary" onclick="location.href=''">Cancelar</button>
+                    <button id="cancelAtt" type="button" class="btn btn-secondary"
+                        onclick="location.href=''">Cancelar</button>
                 </div>
             </div>
         </div>
-    
-</div>
-</form>
 
+    </div>
+</form>

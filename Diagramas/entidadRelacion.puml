@@ -53,12 +53,7 @@ table(AsistenciaPermanente) {
     full_attendance: JSON
 }
 
-table(Configuracion) {
-    primary_key(id): INT
-    --
-    name: VARCHAR
-    value: VARCHAR
-}
+
 
 ' Relaciones
 Usuario "1" -- "n" Asistencia : registra >
@@ -85,11 +80,6 @@ note right of AsistenciaPermanente
   formato JSON
 end note
 
-note right of Configuracion
-  Almacena parámetros
-  de configuración del
-  sistema y conexión
-  a BD externa
-end note
+
 
 @enduml 

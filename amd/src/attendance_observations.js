@@ -111,7 +111,7 @@ define(['jquery'], function($) {
                 if (!startDate || !endDate || !detailedDonwloader) return;
 
                 const diff = (new Date(endDate.value) - new Date(startDate.value)) / (1000 * 60 * 60 * 24);
-                detailedDonwloader.disabled = diff >= 5;
+                detailedDonwloader.disabled = diff >= 7;
             }
 
             $('#start-date').on('change', function () {

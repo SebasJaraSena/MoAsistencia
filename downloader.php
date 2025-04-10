@@ -31,16 +31,35 @@ $userid = $USER->id;
 $initialdate = $_GET['initialdate'];
 $finaldate = $_GET['finaldate'];
 $cumulous = $_GET['cumulous'];
-$data = json_decode($urldata, true);
+/* $data = json_decode($urldata, true); */
+$urldata = $_GET['urldata'] ?? null;
+$data = !empty($urldata) ? json_decode($urldata, true) : [];
+
 $courseid = $_GET['courseid'];
 $PAGE->set_url(new moodle_url('/local/asistencia/downloader.php'));
 $PAGE->set_context(context_course::instance($courseid));
 $PAGE->set_title('Descargar reporte');
 
 global $CFG, $DB;
-
-$attendancehistory = json_decode(json_encode($DB->get_records('local_asistencia_permanente', ['course_id'=> $courseid])),true);
+$attendancehistory = json_decode(json_encode($DB->get_records('local_asistencia_permanente', ['course_id'=> $courseid])), true);
 $shortname = json_decode(json_encode($DB->get_record('course', ['id'=> $courseid],'shortname')), true)['shortname'];
+
 $result = local_asistencia_external::fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid);
+
+$contextid = context_course::instance($courseid)->id;
+$studentdata = fetch_students::fetch_students($contextid, $courseid, 5, 0, 1000); // Role ID 5 = estudiantes
+$students = $studentdata['students_data'];
+
+// Enriquecer los datos con el estado (status)
+foreach ($result as &$row) {
+    foreach ($students as $student) {
+        if ($row['username'] === $student['username']) {
+            $row['status'] = $student['status'];
+            break;
+        }
+    }
+}
+
 local_asistencia_external::attendance_report($result, $initialdate, $finaldate, $shortname);
-redirect($CFG->wwwroot."/local/asistencia/history.php?courseid=$courseid&page=1&info=h&cumulous=$cumulous&filtro_fecha=0");
+
+redirect($CFG->wwwroot . "/local/asistencia/history.php?courseid=$courseid&page=1&info=h&cumulous=$cumulous&filtro_fecha=0");

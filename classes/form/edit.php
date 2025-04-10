@@ -45,7 +45,11 @@ class edit extends moodleform{
         $adminavailable = in_array($userid, explode(",", $adminsarray[0]->value));
         $mform = $this->_form;
         
-        if (isset($_GET['courseid'])) {
+    /*     if (isset($_GET['courseid'])) {
+            $mform->addElement('hidden', 'data', $_GET['data']);
+            $mform->setType('data', PARAM_RAW);
+        } */
+        if (isset($_GET['data'])) {
             $mform->addElement('hidden', 'data', $_GET['data']);
             $mform->setType('data', PARAM_RAW);
         }

@@ -25,14 +25,13 @@ Example context (json):
 }
 }}
 
-<div class="container justify-content-end">
-    <div class="row attendance-row">
-        <div class="col-md-auto">
-            <button type="button" class="btn btn-primary"
-                onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">Regresar al
+<div class="mx-1">
+    <button type="button" class="btn btn-primary"
+           onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">Regresar al
                 menu</button>
-        </div </div>
-    </div>
+</div>
+<div class="container justify-content-end">
+
     <br>
     <form action="./attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}" method="POST"
         id="course_{{courseid}}">
@@ -47,7 +46,7 @@ Example context (json):
 
         <br>
 
-        <div class="container fortable" style="width:auto; overflow-x: auto">
+        <div class="container fortable" style="width:100%; overflow-x: auto">
 
             <input type="hidden" id="courseid" name="courseid" value="{{courseid}}">
             <input type="hidden" id="teacher_{{id}}" name="teacherid" value="{{teacherid}}">
@@ -81,60 +80,63 @@ Example context (json):
                             {{#status}}SUSPENDIDO{{/status}}
                             {{^status}}ACTIVO{{/status}}
                         </td>
-                       {{#week}}
-<td class="select-container column-table">
-    <input type="hidden" name="userids[]" value="{{id}}">
-    <input type="hidden" name="date[]" value="{{fulldate}}">
+                        {{#week}}
+                        <td class="select-container column-table">
+                            <input type="hidden" name="userids[]" value="{{id}}">
+                            <input type="hidden" name="date[]" value="{{fulldate}}">
 
-    {{#locked}}
-        <select class="custom-select form-select-h" disabled>
-            <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
-            <option value="1" {{#selection.op1}}selected{{/selection.op1}}>A</option>
-            <option value="0" {{#selection.op0}}selected{{/selection.op0}}>I</option>
-            <option value="2" {{#selection.op2}}selected{{/selection.op2}}>R</option>
-            <option value="3" {{#selection.op3}}selected{{/selection.op3}}>EM</option>
-        </select>
-        <div class="input-container">
-            <input type="number" class="form-control extra-input" placeholder="Horas"
-                name="extrainfoNum[{{id}}][{{fulldate}}]" value="{{missedhours}}" readonly>
-            <textarea class="form-control extra-input" name="extrainfo[{{id}}][{{fulldate}}]"
-                style="width: 100%; height: 40px;" placeholder="Observaciones" readonly>{{observations}}</textarea>
-        </div>
-    {{/locked}}
+                            {{#locked}}
+                            <select class="custom-select form-select-h" disabled>
+                                <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
+                                <option value="1" {{#selection.op1}}selected{{/selection.op1}}>A</option>
+                                <option value="0" {{#selection.op0}}selected{{/selection.op0}}>I</option>
+                                <option value="2" {{#selection.op2}}selected{{/selection.op2}}>R</option>
+                                <option value="3" {{#selection.op3}}selected{{/selection.op3}}>EM</option>
+                            </select>
+                            <div class="input-container">
+                                <input type="number" class="form-control extra-input" placeholder="Horas"
+                                    name="extrainfoNum[{{id}}][{{fulldate}}]" value="{{missedhours}}" readonly>
+                                <textarea class="form-control extra-input" name="extrainfo[{{id}}][{{fulldate}}]"
+                                    style="width: 100%; height: 40px;" placeholder="Observaciones"
+                                    readonly>{{observations}}</textarea>
+                            </div>
+                            {{/locked}}
 
-    {{^locked}}
-        {{#closed}}
-            <select class="custom-select form-select-h" disabled>
-                <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
-                <option value="1" {{#selection.op1}}selected{{/selection.op1}}>A</option>
-                <option value="0" {{#selection.op0}}selected{{/selection.op0}}>I</option>
-                <option value="2" {{#selection.op2}}selected{{/selection.op2}}>R</option>
-                <option value="3" {{#selection.op3}}selected{{/selection.op3}}>EM</option>
-            </select>
-        {{/closed}}
+                            {{^locked}}
+                            {{#closed}}
+                            <select class="custom-select form-select-h" disabled>
+                                <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
+                                <option value="1" {{#selection.op1}}selected{{/selection.op1}}>A</option>
+                                <option value="0" {{#selection.op0}}selected{{/selection.op0}}>I</option>
+                                <option value="2" {{#selection.op2}}selected{{/selection.op2}}>R</option>
+                                <option value="3" {{#selection.op3}}selected{{/selection.op3}}>EM</option>
+                            </select>
+                            {{/closed}}
 
-        {{^closed}}
-            <select name="attendance[{{id}}][{{fulldate}}]" class="custom-select form-select">
-                <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
-                <option value="1" {{#selection.op1}}selected{{/selection.op1}}>A</option>
-                <option value="0" {{#selection.op0}}selected{{/selection.op0}}>I</option>
-                <option value="2" {{#selection.op2}}selected{{/selection.op2}}>R</option>
-                <option value="3" {{#selection.op3}}selected{{/selection.op3}}>EM</option>
-            </select>
-            <div class="input-container">
-                <input type="number" name="extrainfoNum[{{id}}][{{fulldate}}]" class="form-control extra-input"
-                    placeholder="Horas" min="1" max="10" value="{{missedhours}}">
-                <textarea name="extrainfo[{{id}}][{{fulldate}}]" class="form-control extra-input"
-                    placeholder="Observaciones" style="width: 100%; height: 40px;">{{observations}}</textarea>
-            </div>
-        {{/closed}}
-    {{/locked}}
+                            {{^closed}}
+                            <select name="attendance[{{id}}][{{fulldate}}]" class="custom-select form-select">
+                                <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
+                                <option value="1" {{#selection.op1}}selected{{/selection.op1}} title="Asistió">A</option>
+                                <option value="0" {{#selection.op0}}selected{{/selection.op0}} title="No asistió">I</option>
+                                <option value="2" {{#selection.op2}}selected{{/selection.op2}} title="Llego tarde">R</option>
+                                <option value="3" {{#selection.op3}}selected{{/selection.op3}} title="Excusa medica">EM</option>
+                            </select>
+                            <div class="input-container">
+                                <input type="number" name="extrainfoNum[{{id}}][{{fulldate}}]"
+                                    class="form-control extra-input" placeholder="Horas" min="1" max="10"
+                                    value="{{missedhours}}">
+                                <textarea name="extrainfo[{{id}}][{{fulldate}}]" class="form-control extra-input"
+                                    placeholder="Observaciones"
+                                    style="width: 100%; height: 40px;">{{observations}}</textarea>
+                            </div>
+                            {{/closed}}
+                            {{/locked}}
 
-    {{#status}}
-        <p style="font-size: 0.8em; color: #888; margin-top: 4px;">SUSPENDIDO</p>
-    {{/status}}
-</td>
-{{/week}}
+                            {{#status}}
+                            <p style="font-size: 0.8em; color: #888; margin-top: 4px;">SUSPENDIDO</p>
+                            {{/status}}
+                        </td>
+                        {{/week}}
 
                     </tr>
                     {{/students}}
@@ -191,6 +193,3 @@ Example context (json):
             </div>
         </div>
     </form>
-
-  
-

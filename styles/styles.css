@@ -3,25 +3,43 @@
 }
 .fortable {
     border: 0.1rem solid #39a900;
+    border-radius: 12px;
 }
 
 .table-container {
+    border-radius: 12px;
     overflow-x: auto;
     width: auto;
     position: relative;
 }
+
+.table-container th,
+.table-container td {
+    
+    min-width: 120px;
+    word-break: break-word;
+    border: 1px solid #ddd;
+}
+
 
 table {
     width: 100%;
     border-collapse: collapse;
 }
 
-th, td {
+/* th, td {
     padding: 8px;
     text-align: left;
     border: 1px solid #ddd;
     white-space: nowrap;
     width:70%;
+} */
+
+select.custom-select,
+select.form-select,
+select.form-select-h {
+    border: 0.1rem solid #39a900; /* Puedes cambiar el color o grosor */
+    border-radius: 4px; /* Opcional: para bordes redondeados */
 }
 
 
@@ -77,9 +95,9 @@ th, td {
 
 }
 
-.column-table {
+/* .column-table {
     width: 500 px;
-}
+} */
 
 .button-container {
     display: grid;
