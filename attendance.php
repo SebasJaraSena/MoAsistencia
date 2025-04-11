@@ -342,6 +342,9 @@ if ($form->is_cancelled()) {
 $cache->set("course$courseid.user$userid", $condition);
 
 local_asistencia_setup_breadcrumb('Asistencia general');
+$course = get_course($courseid);
+$shortname = $course->shortname;
+$PAGE->set_heading($shortname); 
 echo $OUTPUT->header();
 $userid = $USER->id;
 $adminsarray = explode(",", $DB->get_record('config', ['name' => 'siteadmins'])->value);

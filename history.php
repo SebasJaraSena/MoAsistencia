@@ -277,7 +277,9 @@ unset($datac['condition']);
 $urldata2 = json_encode($datac); */
 
 local_asistencia_setup_breadcrumb('Histórico');
-
+$course = get_course($courseid);
+$shortname = $course->shortname;
+$PAGE->set_heading($shortname); 
 echo $OUTPUT->header();
 $userid = $USER->id;
 $adminsarray = explode(",", $DB->get_record('config', ['name' => 'siteadmins'])->value);

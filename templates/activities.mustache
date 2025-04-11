@@ -24,12 +24,13 @@
     }
 }}
 
-<div>
-    <a href='/{{dirroot}}/'><- Página principal </a>
+<div class=" my-4">
+    <button type="button" class="btn btn-primary"
+           onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">Regresar al
+                menu</button>
 </div>
-<br>
-<br>
-<h1 class="h1 display-1 text-primary" >Actividades</h1>
+
+        <br>
 <div class="container fortable" style="width:auto; overflow-x: auto">
     <table class="table table-hover table-container">
             <tr>
@@ -65,15 +66,13 @@
     </table>
 </div>
 
-<div class="container">
+<div class="container my-2">
         {{#pages}}
             {{#current}}
                 <button type="button" class="btn btn-secondary" disabled>{{page}}</button>
             {{/current}}
-            {{^current}}
-            
+            {{^current}}        
                 <button type="button" class="btn btn-primary" onclick="location.href='/{{dirroot}}/local/asistencia/activities.php?page={{page}}'" {{active}}>{{page}}</button>
-            
             {{/current}}
         {{/pages}}
 </div>

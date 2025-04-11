@@ -27,10 +27,10 @@ Example context (json):
 
 
 <div class="mx-1">
-<button type="button" class="btn btn-primary"
-                onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">Regresar al
-                menu</button>
- </div>
+    <button type="button" class="btn btn-primary"
+        onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">Regresar al
+        menu</button>
+</div>
 <div class="container ">
     <div class="row attendance-row">
         <div class="col-md-auto">
@@ -46,9 +46,9 @@ Example context (json):
             </form>
         </div>
     </div>
-   
-    
- 
+
+
+
 </div>
 <br>
 <form action="./previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}&weeks={{weeks}}"
@@ -77,7 +77,7 @@ Example context (json):
                     <th class="sticky-column">
                         CORREO
                     </th>
-                    <th>
+                    <th class="sticky-column">
                         ESTADO
                     </th>
 
@@ -106,7 +106,8 @@ Example context (json):
                     <td class="sticky-column">
                         {{email}}
                     </td>
-                    <td class="{{#status}}alert alert-warning{{/status}}{{^status}}alert alert-success{{/status}}">
+                    <td
+                        class="sticky-column {{#status}}alert alert-warning{{/status}}{{^status}}alert alert-success{{/status}}">
                         {{#status}}SUSPENDIDO{{/status}}
                         {{^status}}ACTIVO{{/status}}
                     </td>
@@ -117,10 +118,12 @@ Example context (json):
                         <select name="attendance[{{id}}][{{fulldate}}]" class="custom-select form-select"
                             {{#edit}}disabled{{/edit}}>
                             <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
-                            <option value="1" {{#selection.op1}}selected{{/selection.op1}}  title="Asistió">A</option>
+                            <option value="1" {{#selection.op1}}selected{{/selection.op1}} title="Asistió">A</option>
                             <option value="0" {{#selection.op0}}selected{{/selection.op0}} title="No asistió">I</option>
-                            <option value="2" {{#selection.op2}}selected{{/selection.op2}} title="Llego tarde">R</option>
-                            <option value="3" {{#selection.op3}}selected{{/selection.op3}} title="Excusa medica">EM</option>
+                            <option value="2" {{#selection.op2}}selected{{/selection.op2}} title="Llego tarde">R
+                            </option>
+                            <option value="3" {{#selection.op3}}selected{{/selection.op3}} title="Excusa medica">EM
+                            </option>
                         </select>
 
                         <div class="input-container">

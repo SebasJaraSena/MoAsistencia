@@ -18,7 +18,7 @@
  * Boost.
  *
  * @package    local_asistencia
- * @author     Luis Pérez
+ * @author     Zajuna team 
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -31,6 +31,7 @@ $userid = $USER->id;
 $initialdate = $_GET['initialdate'];
 $finaldate = $_GET['finaldate'];
 $cumulous = $_GET['cumulous'];
+
 /* $data = json_decode($urldata, true); */
 $urldata = $_GET['urldata'] ?? null;
 $data = !empty($urldata) ? json_decode($urldata, true) : [];

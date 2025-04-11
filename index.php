@@ -56,7 +56,9 @@ require_capability('local/asistencia:view', $context);
 //$currentpage = $pageurl+1;
     
     local_asistencia_setup_breadcrumb('Menu');
-
+    $course = get_course($courseid);
+    $shortname = $course->shortname;
+    $PAGE->set_heading($shortname); 
     echo $OUTPUT->header();
     $userid = $USER->id;
     $adminsarray = explode(",",$DB->get_record('config', ['name' => 'siteadmins'])->value);

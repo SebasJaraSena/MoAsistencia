@@ -17,56 +17,88 @@
  * Events for the grading interface.
  * @module     local_asistencia/attendance_views
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  2024 Luis Pérez <lfperezv@sena.edu.co>
+ * @copyright  2025 Zajuna team 
  **/
 
 
 define(['jquery'], function($) {
     function tableStickyColumns(percent) {
-        const stickyColumns = document.querySelectorAll('.sticky-column');
         const table = document.getElementById('attendance-table');
         if (!table) return;
-
-        const thSticky = table.querySelectorAll('th.sticky-column');
-        const tdSticky = table.querySelectorAll('td.sticky-column');
-        const div = thSticky.length;
-        const tdColumns = tdSticky.length;
-
-        stickyColumns.forEach((column, index) => {
-            const width = column.offsetWidth;
-            column.style.width = width + 'px';
-
-            if (index === 0) {
-                thSticky[index].style.left = (percent * 0) + 'px';
-                tdSticky[index].style.left = (percent * 0) + 'px';
-                thSticky[index].style.backgroundColor = '#f1f1f1';
-            } else if (index < div) {
-                const prevWidth = parseInt(thSticky[index - 1].style.width);
-                const prevLeft = parseInt(thSticky[index - 1].style.left);
-                const newLeft = ((prevWidth + prevLeft) * percent) + 'px';
-
-                thSticky[index].style.left = newLeft;
-                tdSticky[index].style.left = newLeft;
-                thSticky[index].style.backgroundColor = '#f1f1f1';
-            } else if (index < tdColumns) {
-                const thIndex = index % div;
-                const leftPosition = thSticky[thIndex].style.left;
-                tdSticky[index].style.left = leftPosition;
+    
+        const isSmallScreen = window.innerWidth <= 768;
+        const headerRow = table.querySelector('thead tr');
+        const headerCells = Array.from(headerRow.children);
+        const rows = Array.from(table.querySelectorAll('tbody tr'));
+    
+        // Paso 1: calcular los "left" de cada columna sticky
+        let leftOffsets = [];
+        let accumulatedLeft = 0;
+    
+        headerCells.forEach((th, index) => {
+            if (!th.classList.contains('sticky-column')) {
+                leftOffsets.push(null);
+                return;
             }
-
-            // Color según estado
-            if (index < tdColumns) {
-                const text = tdSticky[index].innerText.trim();
-                if (text === 'SUSPENDIDO') {
-                    tdSticky[index].style.backgroundColor = '#fcefdc';
-                } else if (text === 'ACTIVO') {
-                    tdSticky[index].style.backgroundColor = '#def1de';
-                } else {
-                    tdSticky[index].style.backgroundColor = '#f1f1f1';
-                }
+    
+            const width = th.offsetWidth;
+            if (isSmallScreen && index > 0) {
+                leftOffsets.push(null); // no sticky para otras columnas
+                return;
+            }
+    
+            leftOffsets.push(accumulatedLeft);
+            accumulatedLeft += width;
+        });
+    
+        // Paso 2: aplicar a los TH
+        headerCells.forEach((th, index) => {
+            if (!th.classList.contains('sticky-column')) return;
+    
+            if (leftOffsets[index] === null) {
+                th.style.position = 'static';
+                th.style.left = '';
+                th.style.zIndex = '';
+            } else {
+                th.style.position = 'sticky';
+                th.style.left = `${leftOffsets[index]}px`;
+                th.style.zIndex = 2;
+                th.style.backgroundColor = '#f1f1f1';
             }
         });
+    
+        // Paso 3: aplicar a los TD por fila
+        rows.forEach(row => {
+            const cells = Array.from(row.children);
+            cells.forEach((td, index) => {
+                if (!td.classList.contains('sticky-column')) return;
+    
+                const text = td.innerText.trim();
+    
+                if (leftOffsets[index] === null) {
+                    td.style.position = 'static';
+                    td.style.left = '';
+                    td.style.zIndex = '';
+                } else {
+                    td.style.position = 'sticky';
+                    td.style.left = `${leftOffsets[index]}px`;
+                    td.style.zIndex = 1;
+                }
+    
+                // Color de fondo por estado
+                if (text === 'SUSPENDIDO') {
+                    td.style.backgroundColor = '#fcefdc';
+                } else if (text === 'ACTIVO') {
+                    td.style.backgroundColor = '#def1de';
+                } else {
+                    td.style.backgroundColor = '#f1f1f1';
+                }
+            });
+        });
     }
+    
+    
+    
 
     function waitForElement(selector, callback) {
         const interval = setInterval(() => {

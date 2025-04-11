@@ -288,6 +288,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['attendance'], $_POST[
     }
 
     $DB->delete_records('local_asistencia', ['courseid' => $courseid]);
+    
     //redirect($CFG->wwwroot . "/local/asistencia/previous_attendance.php?courseid=$courseid&page=1&range=0");
     $url = new moodle_url('/local/asistencia/previous_attendance.php', [
         'courseid' => $courseid,
@@ -335,6 +336,9 @@ else if ($fromform = $form->get_data()){
 
     $cache->set("course$courseid.user$userid", $condition);
     local_asistencia_setup_breadcrumb('Asistencia anterior');
+    $course = get_course($courseid);
+    $shortname = $course->shortname;
+    $PAGE->set_heading($shortname); 
     echo $OUTPUT->header();
     $userid = $USER->id;
     $adminsarray = explode(",",$DB->get_record('config', ['name' => 'siteadmins'])->value);

@@ -29,7 +29,11 @@ use core_calendar\local\event\forms\create;
 require_once(__DIR__ .'/../../config.php');
 require_once(__DIR__ .'/classes/form/edit.php');
 require_once(__DIR__.'/externallib.php');
+require_once($CFG->dirroot.'/local/asistencia/lib.php'); 
 
+require_login(); 
+
+$courseid = $_GET['courseid'];
 $context = context_system::instance();
 $currenturl = new moodle_url('/local/asistencia/activities.php');
 $dircomplement = explode("/",$currenturl->get_path());
@@ -49,6 +53,10 @@ try {
     $activities = local_asistencia_external::fetch_activities_report();
     $form = new edit();
     $numpages = (int) ceil(count($activities)/10); // Define la cantidad de páginas que va a tener la visual
+    local_asistencia_setup_breadcrumb('Listar actividades');
+    $course = get_course($courseid);
+    $shortname = $course->shortname;
+    $PAGE->set_heading($shortname);
     echo $OUTPUT->header();
     
     $pages=[];
@@ -86,6 +94,7 @@ try {
         'activities' => array_slice($activities,($pageurl-1)*10,10),
         'pages' => array_values($pages)??[],
         'dirroot' => $dircomplement[1],
+        'courseid' => $courseid
     ];
     echo $OUTPUT->render_from_template('local_asistencia/activities', $templatecontext);
     
