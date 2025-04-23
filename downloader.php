@@ -22,8 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-require_once(__DIR__ .'/../../config.php');
-require_once(__DIR__.'/externallib.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/externallib.php');
 
 // Creacion de cache
 $cache = cache::make('local_asistencia', 'coursestudentslist');
@@ -42,8 +42,8 @@ $PAGE->set_context(context_course::instance($courseid));
 $PAGE->set_title('Descargar reporte');
 
 global $CFG, $DB;
-$attendancehistory = json_decode(json_encode($DB->get_records('local_asistencia_permanente', ['course_id'=> $courseid])), true);
-$shortname = json_decode(json_encode($DB->get_record('course', ['id'=> $courseid],'shortname')), true)['shortname'];
+$attendancehistory = json_decode(json_encode($DB->get_records('local_asistencia_permanente', ['course_id' => $courseid])), true);
+$shortname = json_decode(json_encode($DB->get_record('course', ['id' => $courseid], 'shortname')), true)['shortname'];
 
 $result = local_asistencia_external::fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid);
 

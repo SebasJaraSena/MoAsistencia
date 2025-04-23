@@ -32,6 +32,7 @@ require_once(__DIR__ . '/externallib.php');
 require_once($CFG->dirroot . '/local/asistencia/lib.php');
 
 require_login();
+
 // Creacion de cache
 $cache = cache::make('local_asistencia', 'coursestudentslist');
 $userid = $USER->id;
@@ -49,10 +50,8 @@ $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array
 
 require_capability('local/asistencia:view', $context);
 
-
-
 // Functions
-function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $userid, $dbtablefieldname, $comulus = 1, $initialdate, $finaldate)
+function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $userid, $dbtablefieldname, $initialdate, $finaldate, $comulus = 1)
 { // Función que formatea la información historica de asistencia por aprendiz en un rango de fechas [x-y]
     $dateaux = date_create($initialdate);
     for ($i = 0; $i < count($studentslist); $i++) {
@@ -71,10 +70,8 @@ function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $us
                 'time' => 0
             ];
         }
-        
 
         if (!empty($cachehistoryattendance)) {
-            // $jsonattendance = json_decode($cachehistoryattendance[array_key_first($filtered)][$dbtablefieldname], true);
 
             $jsonattendance = [];
             $firstKey = array_key_first($filtered);
@@ -95,16 +92,16 @@ function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $us
                     if (!isset($studentslist[$i]['month'][$index]['selection']['details'])) {
                         $studentslist[$i]['month'][$index]['selection']['details'] = [];
                     }
-                    
+
                     // Guardar cada entrada como texto separado
                     $attendance = isset($ja['ATTENDANCE']) && $ja['ATTENDANCE'] !== "-1" ? $arrayopts[$ja['ATTENDANCE']] : "SUSPENDIDO";
-                    $hours = isset($ja['AMOUNTHOURS']) ? (int)$ja['AMOUNTHOURS'] : 0;
+                    $hours = isset($ja['AMOUNTHOURS']) ? (int) $ja['AMOUNTHOURS'] : 0;
                     $studentslist[$i]['month'][$index]['selection']['details'][] = "$attendance - Horas: $hours";
-                    
+
                     // Para vista rápida, puedes contar total horas
                     $studentslist[$i]['month'][$index]['selection']["op"] += $hours;
                     $studentslist[$i]['month'][$index]['current'] = 0;
-                    
+
                 }
             } else {
                 $filteredteacher = !empty($jsonattendance) ? array_filter($jsonattendance, function ($item) use ($userid, $initialdate, $finaldate) { // Se filtran las asistencias relacionadas al instructor que está visualizando los históricos
@@ -167,20 +164,16 @@ if (isset($_GET['initial']) && isset($_GET['final']) && ($day || $week || $range
     [$day, $week, $range_dates] = ($inital && $final) ? [$day, $week, $range_dates] : 0;
 }
 
-/* $initialdate = $inital ? date_timestamp_set($initialdate, (int) $_GET['initial'] * 100) : $initialdate->modify('first day of');
-$finaldate = $final ? date_timestamp_set($finaldate, (int) $_GET['final'] * 100) : $finaldate->modify('last day of');
- */
-/* ------------------------------ */
 // Validaciones seguras
-$inital = isset($_GET['initial']) && is_numeric($_GET['initial']) 
+$inital = isset($_GET['initial']) && is_numeric($_GET['initial'])
     ? ((int) $_GET['initial'] <= strtotime($initialdate->format('Y-m-d')) / 100)
     : false;
 
-$final = isset($_GET['final']) && is_numeric($_GET['final']) 
+$final = isset($_GET['final']) && is_numeric($_GET['final'])
     ? (
         ((int) $_GET['final'] < strtotime($finaldate->modify('last day of')->format('Y-m-d')) / 100)
         || ((int) $_GET['final'] < strtotime($finaldate->modify('next sunday')->format('Y-m-d')) / 100)
-      )
+    )
     : false;
 
 // Restablecer flags si la fecha no es válida
@@ -202,7 +195,7 @@ if ($final && isset($_GET['final'])) {
 } else {
     $finaldate->modify('last day of');
 }
-/* ------------------------------ */
+
 $op = 1;
 $postfilter;
 
@@ -216,7 +209,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") { // Processing POST requestes
         $op = 0;
         $initialdate = isset($_POST['start-date']) ? date_create($_POST['start-date']) : $initialdate;
         $finaldate = isset($_POST['end-date']) ? date_create($_POST['end-date']) : $finaldate;
-    } else if ($postfilter == 'week') { // Rangp de fechas dado por la semana actual contando desde el lunes hasta el siguiente domingo
+    } else if ($postfilter == 'week') { // Rango de fechas dado por la semana actual contando desde el lunes hasta el siguiente domingo
         $op = 0;
         $day = 0;
         $week = 1;
@@ -232,8 +225,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") { // Processing POST requestes
         }
 
         $finaldate = clone $nextsunday->modify('next sunday');
-
-    } else if ($postfilter == 'day') { // Rango de fecha limitado al día actual
+        // Rango de fecha limitado al día actual
+    } else if ($postfilter == 'day') {
         $op = 0;
         $day = 1;
         $week = 0;
@@ -270,16 +263,10 @@ if ($form->is_cancelled()) {
 
 $monthrange = getWeekRange($initialdate->format('Y-m-d'), $finaldate->format('Y-m-d'));
 
-//$datac = json_decode($urldata, true);
-/* $datac['condition'] = $condition;
-$urldata = json_encode($datac);
-unset($datac['condition']);
-$urldata2 = json_encode($datac); */
-
 local_asistencia_setup_breadcrumb('Histórico');
 $course = get_course($courseid);
 $shortname = $course->shortname;
-$PAGE->set_heading($shortname); 
+$PAGE->set_heading($shortname);
 echo $OUTPUT->header();
 $userid = $USER->id;
 $adminsarray = explode(",", $DB->get_record('config', ['name' => 'siteadmins'])->value);
@@ -333,10 +320,7 @@ for ($page = 1; $page <= $pages_attendance_array['pages']; $page++) { // Paginad
     }
 }
 
-/* $comulus = isset($_GET['range']) ? $_GET['range'] : 0;
-$temporalattendance = array_values($DB->get_records('local_asistencia', ['courseid' => $courseid]));
-$students = studentsFormatMonth($studentslist[$attendancepage] ?? $pages_attendance_array_copy[$attendancepage], $monthrange, $cachehistoryattendance, $userid, $dbtablefieldname, $_GET['range'], $initialdate->format('Y-m-d'), $finaldate->format('Y-m-d'));
- */
+
 $comulus = isset($_GET['range']) ? $_GET['range'] : 0;
 $temporalattendance = array_values($DB->get_records('local_asistencia', ['courseid' => $courseid]));
 $students = studentsFormatMonth(
@@ -345,17 +329,16 @@ $students = studentsFormatMonth(
     $cachehistoryattendance,
     $userid,
     $dbtablefieldname,
-    $comulus,
     $initialdate->format('Y-m-d'),
-    $finaldate->format('Y-m-d')
+    $finaldate->format('Y-m-d'),
+    $comulus
 );
 
 
 $studentslist[$attendancepage] = $students;
 $closeattendance = $studentsamount == count($temporalattendance) ? 0 : 1;
 $cache->set('attendancelist' . $courseid, json_encode($studentslist));
-//DEFINIR OPTION 
-//$option = $_GET['option'] ?? null;
+
 $studentsstring = $cache->get('attendancelist' . $courseid);
 $students = json_decode($studentsstring, true);
 $templatecontext = (object) [
@@ -369,20 +352,16 @@ $templatecontext = (object) [
     'currentpage' => $currentpage,
     'initial_value' => $initialdate->format('Y-m-d'),
     'final_value' => $finaldate->format('Y-m-d'),
-    //'option' => $option,
     'day' => $day,
     'week' => $week,
     'range_dates' => $range_dates,
     'page' => $_GET['page'] ?? 0,
-    //'saved' => $saved,
     'closeattendance' => $closeattendance,
-  /*   'initial' => (int) (strtotime($initialdate->format('Y-m-d'))) / 100,
-    'final' => (int) (strtotime($finaldate->format('Y-m-d'))) / 100, */
     'config' => $configbutton,
     'limit' => $limit,
     'dirroot' => $dircomplement[1],
 ];
-//$form->display();
+
 echo $OUTPUT->render_from_template('local_asistencia/history', $templatecontext);
 $PAGE->requires->js_call_amd('local_asistencia/attendance_views', 'init');
 

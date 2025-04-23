@@ -27,11 +27,11 @@ use core\plugininfo\local;
 
 use function PHPSTORM_META\type;
 
-require_once(__DIR__ .'/../../config.php');
-require_once(__DIR__.'/externallib.php');
-require_once($CFG->dirroot.'/local/asistencia/lib.php'); 
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/externallib.php');
+require_once($CFG->dirroot . '/local/asistencia/lib.php');
 
-require_login(); 
+require_login();
 
 global $CFG, $USER;
 
@@ -43,42 +43,42 @@ $courseid = $_GET['courseid'];
 $close = local_asistencia_external::close_validation($courseid);
 $context = context_course::instance($courseid);
 $currenturl = new moodle_url('/local/asistencia/index.php');
-$dircomplement = explode("/",$currenturl->get_path());
+$dircomplement = explode("/", $currenturl->get_path());
 $PAGE->set_url($currenturl);
 $PAGE->set_context($context);
 $PAGE->set_title('Lista Asistencia');
 $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
-$PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array('v'=> time())));
+$PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array('v' => time())));
 
 require_capability('local/asistencia:view', $context);
 
 //$pageurl = $attendancepage-1??0;
 //$currentpage = $pageurl+1;
-    
-    local_asistencia_setup_breadcrumb('Menu');
-    $course = get_course($courseid);
-    $shortname = $course->shortname;
-    $PAGE->set_heading($shortname); 
-    echo $OUTPUT->header();
-    $userid = $USER->id;
-    $adminsarray = explode(",",$DB->get_record('config', ['name' => 'siteadmins'])->value);
-    $configbutton = in_array($userid, $adminsarray)?1:0;
-             
-    $temporalattendance = array_values($DB->get_records('local_asistencia', ['courseid' => $courseid]));
-        
-   
-    //$students = json_decode($studentsstring, true);
-    $templatecontext = (object)[
-        //'students' => $students[$attendancepage],
-        'courseid' => $courseid,
-        'teacherid' => $userid,
-        'config' => $configbutton,
-        // 'closeattendance' => $closeattendance,
-        'dirroot' => $dircomplement[1],
-    ];
-    
-    echo $OUTPUT->render_from_template('local_asistencia/menu', $templatecontext);
 
-    $PAGE->requires->js_call_amd('local_asistencia/attendance_views', 'init');
-    echo $OUTPUT->footer();
-    
+local_asistencia_setup_breadcrumb('Menu');
+$course = get_course($courseid);
+$shortname = $course->shortname;
+$PAGE->set_heading($shortname);
+echo $OUTPUT->header();
+$userid = $USER->id;
+$adminsarray = explode(",", $DB->get_record('config', ['name' => 'siteadmins'])->value);
+$configbutton = in_array($userid, $adminsarray) ? 1 : 0;
+
+$temporalattendance = array_values($DB->get_records('local_asistencia', ['courseid' => $courseid]));
+
+
+//$students = json_decode($studentsstring, true);
+$templatecontext = (object) [
+    //'students' => $students[$attendancepage],
+    'courseid' => $courseid,
+    'teacherid' => $userid,
+    'config' => $configbutton,
+    // 'closeattendance' => $closeattendance,
+    'dirroot' => $dircomplement[1],
+    'bannerurl' => new moodle_url('/local/asistencia/pix/banner.jpg')
+];
+
+echo $OUTPUT->render_from_template('local_asistencia/menu', $templatecontext);
+
+$PAGE->requires->js_call_amd('local_asistencia/attendance_views', 'init');
+echo $OUTPUT->footer();

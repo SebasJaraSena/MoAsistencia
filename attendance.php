@@ -64,7 +64,8 @@ require_capability('local/asistencia:view', $context);
 $a = 0;
 $close = 0;
 
-function studentsFormatWeek($studentslist, $week, $cachehistoryattendance, $userid, $initial, $final, $a, $suspended, $close) {
+function studentsFormatWeek($studentslist, $week, $cachehistoryattendance, $userid, $initial, $final, $a, $suspended, $close)
+{
     global $DB, $courseid;
 
     $weekdaysnames = ['Monday' => 0, 'Tuesday' => 1, 'Wednesday' => 2, 'Thursday' => 3, 'Friday' => 4, 'Saturday' => 5, 'Sunday' => 6];
@@ -83,7 +84,7 @@ function studentsFormatWeek($studentslist, $week, $cachehistoryattendance, $user
                     WHERE ue.userid = ? AND e.courseid = ? AND ue.status = 1
                     ORDER BY ue.timemodified DESC LIMIT 1";
             $params = [$studentid, $courseid];
-        
+
             if ($record = $DB->get_record_sql($sql, $params)) {
                 $suspensionDate = date('Y-m-d', $record->timemodified);
             }
@@ -150,11 +151,8 @@ function studentsFormatWeek($studentslist, $week, $cachehistoryattendance, $user
     return [$studentslist, $totaldaysattendance, $a];
 }
 
-
-
-
-
-function getWeekRange($initial): array {
+function getWeekRange($initial): array
+{
     $week = ['Monday' => 'L', 'Tuesday' => 'M', 'Wednesday' => 'X', 'Thursday' => 'J', 'Friday' => 'V', 'Saturday' => 'S', 'Sunday' => 'D'];
     $fullweek = [];
     $date = new DateTime($initial);
@@ -253,59 +251,50 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && $close == 0) {
             'student_id' => $studentid
         ]);
 
-   if ($result) {
-    $historial = json_decode($result->full_attendance, true);
-    foreach ($records as $newRecord) {
-        $existe = false;
-        foreach ($historial as &$item) {
-            if ($item['DATE'] === $newRecord['DATE'] && $item['TEACHER_ID'] === $newRecord['TEACHER_ID']) {
-                $item = $newRecord;
-                $existe = true;
-                break;
+        if ($result) {
+            $historial = json_decode($result->full_attendance, true);
+            foreach ($records as $newRecord) {
+                $existe = false;
+                foreach ($historial as &$item) {
+                    if ($item['DATE'] === $newRecord['DATE'] && $item['TEACHER_ID'] === $newRecord['TEACHER_ID']) {
+                        $item = $newRecord;
+                        $existe = true;
+                        break;
+                    }
+                }
+                if (!$existe) {
+                    $historial[] = $newRecord;
+                }
             }
+            $result->full_attendance = json_encode($historial);
+            $DB->update_record('local_asistencia_permanente', $result);
+        } else {
+            $nuevo = new stdClass();
+            $nuevo->course_id = $courseid;
+            $nuevo->student_id = $studentid;
+            $nuevo->full_attendance = json_encode(array_values($records));
+            $DB->insert_record('local_asistencia_permanente', $nuevo);
         }
-        if (!$existe) {
-            $historial[] = $newRecord;
-        }
-    }
-    $result->full_attendance = json_encode($historial);
-    $DB->update_record('local_asistencia_permanente', $result);
-} else {
-    $nuevo = new stdClass();
-    $nuevo->course_id = $courseid;
-    $nuevo->student_id = $studentid;
-    $nuevo->full_attendance = json_encode(array_values($records));
-    $DB->insert_record('local_asistencia_permanente', $nuevo);
-}
 
-    // 🔄 Refrescar caché después de guardar
-    $updated_attendance = $DB->get_records('local_asistencia_permanente', ['course_id' => $courseid]);
-    $cache->set("H_$courseid", json_encode($updated_attendance));
+        // 🔄 Refrescar caché después de guardar
+        $updated_attendance = $DB->get_records('local_asistencia_permanente', ['course_id' => $courseid]);
+        $cache->set("H_$courseid", json_encode($updated_attendance));
 
     }
     $DB->delete_records('local_asistencia', ['courseid' => $courseid]);
 
-    //\core\notification::add("Asistencia guardada correctamente.", \core\output\notification::NOTIFY_SUCCESS);
-    // \cache_helper::purge_by_event('changesincourse'); // 🧹 limpia la caché relevante del curso
-    // redirect(new moodle_url('/local/asistencia/attendance.php', [
-    //     'courseid' => $courseid,
-    //     'range' => 0,
-    //     'page' => 1
-    // ]));
 
-   // redirect($CFG->wwwroot . '/local/asistencia/attendance.php?id=' . $courseid . '&range=0&page=1');
-
-   $url = new moodle_url('/local/asistencia/attendance.php', [
-    'courseid' => $courseid,
-    'range' => 0,
-    'page' => 1
+    $url = new moodle_url('/local/asistencia/attendance.php', [
+        'courseid' => $courseid,
+        'range' => 0,
+        'page' => 1
     ]);
 
-echo $OUTPUT->header();
-echo $OUTPUT->notification("Guardando asistencia, redireccionando...", 'notifysuccess');
-echo "<script>setTimeout(function(){ window.location.href = '{$url}'; }, 50);</script>";
-echo $OUTPUT->footer();
-exit;
+    echo $OUTPUT->header();
+    echo $OUTPUT->notification("Guardando asistencia, redireccionando...", 'notifysuccess');
+    echo "<script>setTimeout(function(){ window.location.href = '{$url}'; }, 50);</script>";
+    echo $OUTPUT->footer();
+    exit;
 
 }
 
@@ -344,7 +333,7 @@ $cache->set("course$courseid.user$userid", $condition);
 local_asistencia_setup_breadcrumb('Asistencia general');
 $course = get_course($courseid);
 $shortname = $course->shortname;
-$PAGE->set_heading($shortname); 
+$PAGE->set_heading($shortname);
 echo $OUTPUT->header();
 $userid = $USER->id;
 $adminsarray = explode(",", $DB->get_record('config', ['name' => 'siteadmins'])->value);
@@ -432,7 +421,6 @@ $templatecontext = (object) [
     'range' => $_GET['range'] ?? 0,
     'config' => $configbutton,
     'closeattendance' => $closeattendance,
-    //'limit' => $limit, //* Variable que cambia entre páginado o todo en una página
     'dirroot' => $dircomplement[1],
     'asistio' => "Asistió",
     'inasistencia' => "No asistió",

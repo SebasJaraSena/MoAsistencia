@@ -1,15 +1,16 @@
 <?php
 defined('MOODLE_INTERNAL') || die();
 
-require_once(__DIR__ .'/../../config.php');
-require_once(__DIR__.'/externallib.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/externallib.php');
 
-function local_asistencia_extend_navigation_course($navigation, $course, $context) {
+function local_asistencia_extend_navigation_course($navigation, $course, $context)
+{
     global $DB, $USER;
     // Asegúrate de que el usuario tiene permisos para ver este enlace.
     if (has_capability('moodle/course:manageactivities', $context)) {
         // Crea la URL para el enlace, incluyendo el courseid.
-        $url = new moodle_url('/local/asistencia/index.php', array('courseid' => $course->id,'page' => 1));
+        $url = new moodle_url('/local/asistencia/index.php', array('courseid' => $course->id, 'page' => 1));
 
         // Añade el enlace al menú de administración del curso.
         $navigation->add(
@@ -21,14 +22,15 @@ function local_asistencia_extend_navigation_course($navigation, $course, $contex
         );
     }
 }
-function local_asistencia_setup_breadcrumb($page_title) {
+function local_asistencia_setup_breadcrumb($page_title)
+{
     global $PAGE, $SESSION;
 
     // Obtener todos los parámetros de la URL actual
     $params = $_GET;
 
     // 🔥 **Filtrar solo los parámetros esenciales**
-    $allowed_params = ['courseid', 'info', 'page']; // Agrega aquí los parámetros que sí deben considerarse
+    $allowed_params = ['courseid', 'info']; // Agrega aquí los parámetros que sí deben considerarse
     $filtered_params = array_intersect_key($params, array_flip($allowed_params));
 
     // Construir la URL con los parámetros relevantes

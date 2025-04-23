@@ -90,7 +90,7 @@ Example context (json):
                 instructores{{/range}}
             </button>
             <button type="button" class="btn btn-primary"
-                onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page={{page}}&info=h&limit={{#limit}}0{{/limit}}{{^limit}}1{{/limit}}'">
+                onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&info=h&page=1&initial={{initial}}&final={{final}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}{{#range}}&range=1{{/range}}{{^range}}&range=0{{/range}}{{#limit}}&limit=0{{/limit}}{{^limit}}&limit=1&page=1{{/limit}}'">
                 {{#limit}}Ver listado completo{{/limit}}{{^limit}}Ver paginado{{/limit}}
             </button>
         </div>

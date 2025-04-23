@@ -1,6 +1,7 @@
 .container {
     padding-left: 0%;
 }
+
 .fortable {
     border: 0.1rem solid #39a900;
     border-radius: 12px;
@@ -15,12 +16,11 @@
 
 .table-container th,
 .table-container td {
-    
+
     min-width: 120px;
     word-break: break-word;
     border: 1px solid #ddd;
 }
-
 
 table {
     width: 100%;
@@ -28,21 +28,12 @@ table {
     border-collapse: collapse;
 }
 
-/* th, td {
-    padding: 8px;
-    text-align: left;
-    border: 1px solid #ddd;
-    white-space: nowrap;
-    width:70%;
-} */
-
 select.custom-select,
 select.form-select,
 select.form-select-h {
-    border: 0.1rem solid #39a900; /* Puedes cambiar el color o grosor */
-    border-radius: 4px; /* Opcional: para bordes redondeados */
+    border: 0.1rem solid #39a900;
+    border-radius: 4px;
 }
-
 
 .sticky-column {
     position: sticky;
@@ -62,13 +53,14 @@ select.form-select-h {
 
 .input-container {
     display: none;
-    
+
 }
 
 .extra-input {
     width: 4rem;
 }
-.attendance-row{
+
+.attendance-row {
     flex-flow: row-reverse;
 }
 
@@ -81,7 +73,7 @@ select.form-select-h {
     position: fixed;
     inset: 0;
     display: none;
-    z-index: 1;
+    z-index: 1000;
 }
 
 .new-modal:target {
@@ -96,38 +88,34 @@ select.form-select-h {
 
 }
 
-/* .column-table {
-    width: 500 px;
-} */
-
 .button-container {
     display: grid;
     gap: 16px;
     justify-content: center;
-  }
+}
 
-  .button-group {
+.button-group {
     display: flex;
     gap: 16px;
     justify-content: center;
-  }
+}
 
-  .btn-custom {
-    width: 220px; /* Ancho fijo para todos */
-    height: 60px; /* Altura fija para uniformidad */
+.btn-custom {
+    width: 220px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     font-size: 16px;
     font-weight: bold;
-    background-color: #28a745; /* Verde, puedes cambiarlo */
+    background-color: #28a745;
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-  }
+}
 
-  .btn-custom:hover {
+.btn-custom:hover {
     background-color: #218838;
-  }
+}

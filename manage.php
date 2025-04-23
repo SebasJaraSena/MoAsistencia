@@ -25,8 +25,8 @@
 use block_rss_client\output\item;
 use core\plugininfo\local;
 
-require_once(__DIR__ .'/../../config.php');
-require_once(__DIR__ .'/classes/form/edit.php');
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/classes/form/edit.php');
 
 
 $context = context_system::instance();
@@ -39,17 +39,17 @@ require_capability('local/asistencia:manage', $context);
 $form = new edit();
 
 echo $OUTPUT->header();
-if ($fromform = $form->get_data()){
-    foreach($fromform as $key =>$value){
-        if($key != 'submitbutton'){
+if ($fromform = $form->get_data()) {
+    foreach ($fromform as $key => $value) {
+        if ($key != 'submitbutton') {
             $record_insert_update = $DB->get_record('local_asistencia_config', ['name' => $key]);
-            if(empty($record_insert_update)){
+            if (empty($record_insert_update)) {
                 $record_insert_update = new stdClass();
                 $record_insert_update->name = $key;
-                $record_insert_update->value= $value;
+                $record_insert_update->value = $value;
                 $DB->insert_record('local_asistencia_config', $record_insert_update);
-            }else{
-                $record_insert_update->value= $value;
+            } else {
+                $record_insert_update->value = $value;
                 $DB->update_record('local_asistencia_config', $record_insert_update);
             }
         }
@@ -60,7 +60,7 @@ if ($fromform = $form->get_data()){
         $toinsert->message = "Configuración de la base de datos guardada con éxito.";
         $toinsert->date = date("Y-m-d H:i:s", time());
         $toinsert->userid = $USER->id;
-        $DB->insert_record("local_asistencia_logs",$toinsert);
+        $DB->insert_record("local_asistencia_logs", $toinsert);
     } catch (\Throwable $th) {
         //throw $th;
     }
@@ -68,7 +68,7 @@ if ($fromform = $form->get_data()){
 }
 
 $templatecontext = (object) [
-    'h1' =>get_string('pluginmanagetitle', 'local_asistencia'),
+    'h1' => get_string('pluginmanagetitle', 'local_asistencia'),
 ];
 
 echo $OUTPUT->render_from_template('local_asistencia/manage', $templatecontext);

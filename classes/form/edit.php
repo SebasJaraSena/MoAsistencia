@@ -44,11 +44,7 @@ class edit extends moodleform{
         $adminsarray = array_values($DB->get_records('config', ['name' => 'siteadmins']));
         $adminavailable = in_array($userid, explode(",", $adminsarray[0]->value));
         $mform = $this->_form;
-        
-    /*     if (isset($_GET['courseid'])) {
-            $mform->addElement('hidden', 'data', $_GET['data']);
-            $mform->setType('data', PARAM_RAW);
-        } */
+
         if (isset($_GET['data'])) {
             $mform->addElement('hidden', 'data', $_GET['data']);
             $mform->setType('data', PARAM_RAW);
@@ -88,8 +84,7 @@ class edit extends moodleform{
     public function dbConfiguration(){
         global $DB;
         
-        $mform = $this->_form;
-        
+        $mform = $this->_form;  
         $mform->addElement('text', 'dbhost', get_string('dbhost','local_asistencia'));
         $mform->addRule('dbhost', get_string('error', 'local_asistencia'), 'required');
         $mform->setDefault('dbhost', $DB->get_records('local_asistencia_config', ['name' => 'dbhost'])->value);

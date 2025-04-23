@@ -26,78 +26,74 @@ use block_rss_client\output\item;
 use core\plugininfo\local;
 use core_calendar\local\event\forms\create;
 
-require_once(__DIR__ .'/../../config.php');
-require_once(__DIR__ .'/classes/form/edit.php');
-require_once(__DIR__.'/externallib.php');
-require_once($CFG->dirroot.'/local/asistencia/lib.php'); 
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/classes/form/edit.php');
+require_once(__DIR__ . '/externallib.php');
+require_once($CFG->dirroot . '/local/asistencia/lib.php');
 
-require_login(); 
+require_login();
 
 $courseid = $_GET['courseid'];
 $context = context_system::instance();
 $currenturl = new moodle_url('/local/asistencia/activities.php');
-$dircomplement = explode("/",$currenturl->get_path());
+$dircomplement = explode("/", $currenturl->get_path());
 $PAGE->set_url($currenturl);
 $PAGE->set_context($context);
 $PAGE->set_title('Actividades');
 $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
-$PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array('v'=> time())));
+$PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array('v' => time())));
 
 require_capability('local/asistencia:view', $context);
 
 
-$pageurl = isset($_GET['page'])?$_GET['page']:1;
-$dbname = $DB->get_record('local_asistencia_config', ['name'=> 'dbname'])->value;
+$pageurl = isset($_GET['page']) ? $_GET['page'] : 1;
+$dbname = $DB->get_record('local_asistencia_config', ['name' => 'dbname'])->value;
 try {
     // Se consultan todos los registros en la tabla local_asistencia_logs
     $activities = local_asistencia_external::fetch_activities_report();
     $form = new edit();
-    $numpages = (int) ceil(count($activities)/10); // Define la cantidad de páginas que va a tener la visual
+    $numpages = (int) ceil(count($activities) / 10); // Define la cantidad de páginas que va a tener la visual
     local_asistencia_setup_breadcrumb('Listar actividades');
     $course = get_course($courseid);
     $shortname = $course->shortname;
     $PAGE->set_heading($shortname);
     echo $OUTPUT->header();
-    
-    $pages=[];
-    for($page = 1; $page <= $numpages; $page++){
-        if ($page === 1){
-            $pages[$page] =[
+    $currentpage = (int) $pageurl;
+    $numpages = (int) ceil(count($activities) / 10);
+    $pages = [];
+
+    for ($page = 1; $page <= $numpages; $page++) {
+        if (
+            $page == 1 ||
+            $page == $numpages ||
+            abs($page - $currentpage) <= 2
+        ) {
+            // Páginas visibles siempre (1, última y ±2 del actual)
+            $pages[] = [
                 'page' => $page,
-                'current' => $page==$pageurl?1:0,
+                'current' => $page == $currentpage,
                 'active' => ''
             ];
-        }
-        if(($page === 2 || $page === $numpages-1) && abs($currentpage-$page) >= 3 ){
-            $pages[$page] = [
-                'page'=> '...',
-                'current'=> false,
+        } elseif (
+            end($pages)['page'] !== '...'
+        ) {
+            // Insertar "..." solo una vez entre saltos
+            $pages[] = [
+                'page' => '...',
+                'current' => false,
                 'active' => 'disabled'
             ];
         }
-        if (abs($page - $currentpage) < 3){
-            $pages[$page] =[
-                'page' => $page,
-                'current' => $page==$pageurl?1:0,
-                'active' => ''
-            ];
-        }
-        if ($page === $numpages){
-            $pages[$page] =[
-                'page' => $page,
-                'current' => $page==$pageurl?1:0,
-                'active' => ''
-            ];
-        }
     }
-    $templatecontext = (object)[
-        'activities' => array_slice($activities,($pageurl-1)*10,10),
-        'pages' => array_values($pages)??[],
+
+    $templatecontext = (object) [
+        'activities' => array_slice($activities, ($pageurl - 1) * 10, 10),
+        'pages' => array_values($pages) ?? [],
         'dirroot' => $dircomplement[1],
         'courseid' => $courseid
     ];
     echo $OUTPUT->render_from_template('local_asistencia/activities', $templatecontext);
-    
+
     echo $OUTPUT->footer();
 } catch (\Throwable $th) {
     try {
@@ -106,15 +102,15 @@ try {
         $toinsert->message = "No se pudo traer información de la base de datos externa $dbname.";
         $toinsert->date = date("Y-m-d H:i:s", time());
         $toinsert->userid = $USER->id;
-        $DB->insert_record("local_asistencia_logs",$toinsert);
+        $DB->insert_record("local_asistencia_logs", $toinsert);
     } catch (\Throwable $th) {
         //throw $th;
     }
-    $adminsarray = explode(",",$DB->get_record("config", ["name" => "siteadmins"])->value);
-    
-    $templatecontext= (object) [
+    $adminsarray = explode(",", $DB->get_record("config", ["name" => "siteadmins"])->value);
+
+    $templatecontext = (object) [
         'courseid' => $data['courseid'],
-        'config' => in_array($data['userid'], $adminsarray)?1:0,
+        'config' => in_array($data['userid'], $adminsarray) ? 1 : 0,
         'dirroot' => $dircomplement[array_key_last($dircomplement)],
     ];
     echo $OUTPUT->header();
