@@ -64,6 +64,7 @@ define(['jquery'], function($) {
                 th.style.left = `${leftOffsets[index]}px`;
                 th.style.zIndex = 2;
                 th.style.backgroundColor = '#f1f1f1';
+                th.style.fontSize = '14px';
             }
         });
     

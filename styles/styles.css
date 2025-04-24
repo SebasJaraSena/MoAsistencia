@@ -119,3 +119,46 @@ select.form-select-h {
 .btn-custom:hover {
     background-color: #218838;
 }
+
+/* imagen del menu  */
+
+  .button-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    justify-content: center;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px 0;
+  }
+  
+  
+  .image-button {
+    position: relative;
+    width: 100%;
+    max-width: 220px;
+    height: auto;
+  }
+  
+  .image-button img {
+    width: 100%;
+    display: block;
+    transition: opacity 0.2s ease;
+    border-radius: 8px;
+  }
+  
+  .img-hover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+  }
+  
+  .image-button:hover .img-hover {
+    opacity: 1;
+  }
+  
+  .image-button:hover .img-normal {
+    opacity: 0;
+  }
+  

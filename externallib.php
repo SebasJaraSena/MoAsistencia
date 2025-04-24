@@ -44,7 +44,10 @@ class local_asistencia_external
 
     public static function edit()
     {
-        return edit::definition();
+       /*  return edit::definition(); */
+       $form = new edit();
+       $form->definition(); 
+
     }
 
     public static function query($query, $params = [])

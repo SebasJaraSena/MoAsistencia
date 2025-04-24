@@ -50,12 +50,18 @@ function local_asistencia_setup_breadcrumb($page_title)
     }
 
     // **Eliminar duplicados por URL filtrada**
-    foreach ($SESSION->asistencia_breadcrumb as $key => $breadcrumb) {
+   /*  foreach ($SESSION->asistencia_breadcrumb as $key => $breadcrumb) {
         if ($breadcrumb['url'] === $currenturl->out(false)) {
             unset($SESSION->asistencia_breadcrumb[$key]);
         }
+    } */
+   // **Eliminar duplicados por URL filtrada**
+    foreach ($SESSION->asistencia_breadcrumb as $key => $breadcrumb) {
+        if ($breadcrumb['url'] === $currenturl->out(false) || $breadcrumb['name'] === $page_title) {
+            unset($SESSION->asistencia_breadcrumb[$key]);
+        }
     }
-
+    
     // Reindexar array
     $SESSION->asistencia_breadcrumb = array_values($SESSION->asistencia_breadcrumb);
 
