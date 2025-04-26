@@ -131,7 +131,7 @@ function studentsFormatWeek($studentslist, $week, $cachehistoryattendance, $user
                 $studentslist[$i]['week'][$index]['missedhours'] = $record['AMOUNTHOURS'] ?? '';
                 $studentslist[$i]['week'][$index]['observations'] = $record['OBERVATIONS'] ?? '';
 
-                // 🔒 Bloquear si ya existe asistencia guardada
+                //  Bloquear si ya existe asistencia guardada
                 $studentslist[$i]['week'][$index]['locked'] = true;
 
                 $totaldaysattendance++;

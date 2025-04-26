@@ -64,17 +64,32 @@ require_capability('local/asistencia:view', $context);
 $a = 0;
 
 // Functions
-function studentsFormatWeek($studentslist, $week, $cachehistoryattendance, $temporalattendance, $userid, $initial, $final, $a, $suspended)
-{
+function studentsFormatWeek($studentslist, $week, $cachehistoryattendance, $temporalattendance, $userid, $initial, $final, $a, $suspended, $courseid) {
     global $DB;
+
     $weekdaysnames = ['Monday' => 0, 'Tuesday' => 1, 'Wednesday' => 2, 'Thursday' => 3, 'Friday' => 4, 'Saturday' => 5, 'Sunday' => 6];
+    $initialDate = new DateTime($initial);
     $totaldaysattendance = 0;
 
     foreach ($studentslist as $i => $student) {
         $studentid = $student['id'];
         $studentslist[$i]['week'] = $week;
 
-        // Inicializar semana vacía
+        // Obtener fecha de suspensión
+        $suspensionDate = null;
+        if ($student['status']) {
+            $sql = "SELECT ue.timemodified
+                    FROM {user_enrolments} ue
+                    JOIN {enrol} e ON ue.enrolid = e.id
+                    WHERE ue.userid = ? AND e.courseid = ? AND ue.status = 1
+                    ORDER BY ue.timemodified DESC LIMIT 1";
+            $params = [$studentid, $courseid];
+            if ($record = $DB->get_record_sql($sql, $params)) {
+                $suspensionDate = date('Y-m-d', $record->timemodified);
+            }
+        }
+
+        // Inicializar semana por defecto
         for ($j = 0; $j < 7; $j++) {
             $studentslist[$i]['week'][$j]['selection'] = [
                 'op-8' => 1,
@@ -83,74 +98,69 @@ function studentsFormatWeek($studentslist, $week, $cachehistoryattendance, $temp
                 'op2' => 0,
                 'op3' => 0,
             ];
-            $studentslist[$i]['week'][$j]['edit'] = 0;
+            $studentslist[$i]['week'][$j]['locked'] = false;
+            $studentslist[$i]['week'][$j]['missedhours'] = '';
+            $studentslist[$i]['week'][$j]['observations'] = '';
         }
 
-        // Obtener asistencia permanente
+        // Marcar asistencias históricas
         $filtered = array_filter($cachehistoryattendance, fn($item) => $item['student_id'] == $studentid);
-
-        $jsonattendance = [];
-        $firstKey = array_key_first($filtered);
-        if ($firstKey !== null && isset($cachehistoryattendance[$firstKey]['full_attendance'])) {
+        if (!empty($filtered)) {
+            $firstKey = array_key_first($filtered);
             $jsonattendance = json_decode($cachehistoryattendance[$firstKey]['full_attendance'], true) ?? [];
-        }
 
-        $filtereddate = array_filter($jsonattendance, function ($item) use ($initial, $final, $userid) {
-            return $item['DATE'] >= $initial && $item['DATE'] <= $final && $item['TEACHER_ID'] == $userid;
-        });
+            $filteredRecords = array_filter($jsonattendance, function ($item) use ($initial, $final, $userid) {
+                return $item['DATE'] >= $initial && $item['DATE'] <= $final && $item['TEACHER_ID'] == $userid;
+            });
 
-        foreach ($filtereddate as $index => $value) {
-            $a++;
-            $jadate = DateTime::createFromFormat('Y-m-d', $value['DATE']);
-            $dayIndex = $weekdaysnames[$jadate->format('l')];
+            foreach ($filteredRecords as $record) {
+                $date = DateTime::createFromFormat('Y-m-d', $record['DATE']);
+                $dayName = $date->format('l');
+                $index = $weekdaysnames[$dayName];
 
-            $studentslist[$i]['week'][$dayIndex]['selection'] = [
-                'op-8' => 0,
-                'op0' => 0,
-                'op1' => 0,
-                'op2' => 0,
-                'op3' => 0,
-            ];
-            $studentslist[$i]['week'][$dayIndex]['selection']['op' . $value['ATTENDANCE']] = 1;
-            $studentslist[$i]['week'][$dayIndex]['edit'] = 1;
-            $studentslist[$i]['week'][$dayIndex]['missedhours'] = $value['AMOUNTHOURS'] ?? '';
-            $studentslist[$i]['week'][$dayIndex]['observations'] = $value['OBERVATIONS'] ?? '';
-        }
+                $studentslist[$i]['week'][$index]['selection'] = [
+                    'op-8' => 0,
+                    'op0' => 0,
+                    'op1' => 0,
+                    'op2' => 0,
+                    'op3' => 0,
+                ];
+                $studentslist[$i]['week'][$index]['selection']['op' . $record['ATTENDANCE']] = 1;
+                $studentslist[$i]['week'][$index]['missedhours'] = $record['AMOUNTHOURS'] ?? '';
+                $studentslist[$i]['week'][$index]['observations'] = $record['OBERVATIONS'] ?? '';
 
-        // Obtener fecha de suspensión si aplica
-        $suspensionDate = null;
-        if ($student['status']) {
-            $sql = "SELECT ue.timemodified
-                    FROM {user_enrolments} ue
-                    JOIN {enrol} e ON ue.enrolid = e.id
-                    WHERE ue.userid = ? AND e.courseid = ? AND ue.status = 1
-                    ORDER BY ue.timemodified DESC LIMIT 1";
-            $params = [$studentid, $student['courseid'] ?? 0];
-            if ($record = $DB->get_record_sql($sql, $params)) {
-                $suspensionDate = date('Y-m-d', $record->timemodified);
+                $studentslist[$i]['week'][$index]['locked'] = true; // 🔒 Bloquear si tiene asistencia
+                $totaldaysattendance++;
             }
         }
 
-        // Procesar asistencia temporal
+        // Marcar asistencias temporales
         if (!empty($temporalattendance)) {
             $filteredtemp = array_filter(json_decode(json_encode($temporalattendance), true), fn($item) => $item['studentid'] == $studentid);
-
             foreach ($filteredtemp as $prevattndnc) {
                 $day = DateTime::createFromFormat('Y-m-d', $prevattndnc['date'])->format('l');
-                $dayIndex = $weekdaysnames[$day];
+                $index = $weekdaysnames[$day];
 
-                // Solo permitir si es antes de suspensión o no está suspendido
-                if (!$student['status'] || $prevattndnc['date'] < $suspensionDate) {
-                    $studentslist[$i]['week'][$dayIndex]['selection'] = [
-                        'op-8' => 0,
-                        'op0' => 0,
-                        'op1' => 0,
-                        'op2' => 0,
-                        'op3' => 0,
-                    ];
-                    $studentslist[$i]['week'][$dayIndex]['selection']['op' . $prevattndnc['attendance']] = 1;
-                    $studentslist[$i]['week'][$dayIndex]['missedhours'] = $prevattndnc['amounthours'] != 0 ? $prevattndnc['amounthours'] : '';
-                    $studentslist[$i]['week'][$dayIndex]['observations'] = $prevattndnc['observations'];
+                $studentslist[$i]['week'][$index]['selection'] = [
+                    'op-8' => 0,
+                    'op0' => 0,
+                    'op1' => 0,
+                    'op2' => 0,
+                    'op3' => 0,
+                ];
+                $studentslist[$i]['week'][$index]['selection']['op' . $prevattndnc['attendance']] = 1;
+                $studentslist[$i]['week'][$index]['missedhours'] = $prevattndnc['amounthours'] != 0 ? $prevattndnc['amounthours'] : '';
+                $studentslist[$i]['week'][$index]['observations'] = $prevattndnc['observations'] ?? '';
+
+                $studentslist[$i]['week'][$index]['locked'] = true; // 🔒 Bloquear si tiene asistencia temporal
+            }
+        }
+
+        // Bloquear desde la fecha de suspensión
+        if ($suspensionDate) {
+            foreach ($week as $j => $day) {
+                if ($day['fulldate'] >= $suspensionDate) {
+                    $studentslist[$i]['week'][$j]['locked'] = true;
                 }
             }
         }
@@ -159,8 +169,6 @@ function studentsFormatWeek($studentslist, $week, $cachehistoryattendance, $temp
     $auxiliar = (count($studentslist) - $suspended) == 0 ? 0 : $totaldaysattendance / (count($studentslist) - $suspended);
     return [$studentslist, $auxiliar, $a];
 }
-
-
 
 
 function getWeekRange($initial): array
