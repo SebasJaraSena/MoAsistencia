@@ -1,68 +1,73 @@
 {{!
-    This file is part of Moodle - http://moodle.org/
+This file is part of Moodle - http://moodle.org/
 
-    Moodle is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Moodle is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    Moodle is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+Moodle is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+You should have received a copy of the GNU General Public License
+along with Moodle. If not, see
+<http: //www.gnu.org/licenses />.
 }}
 {{!
-    @template local_asistencia/manage
+@template local_asistencia/manage
 
 
-    Example context (json):
-    {
-       
-    }
+Example context (json):
+{
+
+}
 }}
 
 <div class=" my-4">
     <button type="button" class="btn btn-primary"
-           onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">Regresar al
-                menu</button>
+        onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">Regresar al
+        menu</button>
 </div>
 
-        <br>
+<br>
 <div class="container fortable" style="width:auto; overflow-x: auto">
-    <table class="table table-hover table-container"style="width: 100%; table-layout: fixed;">
+    <table class="table table-hover table-container" style="width: 100%; table-layout: fixed;">
+        <thead>
             <tr>
-                <th >
+                <th>
                     CÓDIGO
                 </th>
-                <th >
+                <th>
                     MENSAJE
                 </th>
-                <th >
+                <th>
                     FECHA
                 </th>
-                <th >
+                <th>
                     USERNAME
                 </th>
             </tr>
+        </thead>
+        <tbody>
             {{#activities}}
-                <tr>
-                    <td >
-                        {{code}}
-                    </td>
-                    <td>
-                        {{message}}
-                    </td>
-                    <td>
-                        {{date}}
-                    </td>
-                    <td>
-                        {{username}}
-                    </td>
-                </tr>
+            <tr>
+                <td>
+                    {{code}}
+                </td>
+                <td>
+                    {{message}}
+                </td>
+                <td>
+                    {{date}}
+                </td>
+                <td>
+                    {{username}}
+                </td>
+            </tr>
             {{/activities}}
+        </tbody>
     </table>
 </div>
 
@@ -70,24 +75,23 @@
 
 <div class="container my-2 d-flex flex-wrap justify-content-center">
     {{#pages}}
-        <div class="mx-1">
-            {{#current}}
-                <button type="button" class="btn btn-secondary" disabled>{{page}}</button>
-            {{/current}}
+    <div class="mx-1">
+        {{#current}}
+        <button type="button" class="btn btn-secondary" disabled>{{page}}</button>
+        {{/current}}
 
-            {{^current}}
-                {{#active}}
-                    <button type="button" class="btn btn-light" disabled>{{page}}</button>
-                {{/active}}
+        {{^current}}
+        {{#active}}
+        <button type="button" class="btn btn-light" disabled>{{page}}</button>
+        {{/active}}
 
-                {{^active}}
-                    <button type="button" class="btn btn-primary"
-                        onclick="location.href='/{{dirroot}}/local/asistencia/activities.php?courseid={{courseid}}&page={{page}}'">
-                        {{page}}
-                    </button>
-                {{/active}}
-            {{/current}}
-        </div>
+        {{^active}}
+        <button type="button" class="btn btn-primary"
+            onclick="location.href='/{{dirroot}}/local/asistencia/activities.php?courseid={{courseid}}&page={{page}}'">
+            {{page}}
+        </button>
+        {{/active}}
+        {{/current}}
+    </div>
     {{/pages}}
 </div>
-

@@ -36,11 +36,14 @@ select.form-select-h {
 }
 
 .sticky-column {
-    position: sticky;
-    left: 0;
     background-color: #f1f1f1;
     z-index: 1;
+    box-sizing: border-box;
+    min-width: 150px;
+    max-width: 150px;
+    width: 150px;
 }
+
 
 .input-class {
     display: none;

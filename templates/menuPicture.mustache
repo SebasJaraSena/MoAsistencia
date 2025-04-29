@@ -1,0 +1,52 @@
+{{! This file is part of Moodle - http://moodle.org/ Moodle is free software:
+you can redistribute it and/or modify it under the terms of the GNU General
+Public License as published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version. Moodle is distributed in the
+hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+General Public License for more details. You should have received a copy of the
+GNU General Public License along with Moodle. If not, see
+<http://www.gnu.org/licenses/>. }} {{! @template local_asistencia/manage Example
+context (json): { } }}
+
+<div class="mx-1">
+  <button
+    type="button"
+    class="btn btn-primary"
+    onclick="location.href='/{{dirroot}}/course/view.php?id={{courseid}}'"
+  >
+    Volver al curso
+  </button>
+</div>
+
+<div class="container d-grid gap-2 col-6 mx-auto">
+  <div class="button-grid-container">
+  <!-- Asistencia general -->
+  <a href="/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page=1" class="image-button">
+    <img src="/{{dirroot}}/local/asistencia/pix/asistencia_general.svg" class="img-normal" alt="Asistencia general">
+    <img src="/{{dirroot}}/local/asistencia/pix/asistencia_general_hover.svg" class="img-hover" alt="Asistencia general hover">
+  </a>
+
+  <!-- Completar asistencia anterior -->
+  <a href="/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&page=1&info=p" class="image-button">
+    <img src="/{{dirroot}}/local/asistencia/pix/completar_asistencia_anterior.svg" class="img-normal" alt="Completar asistencia anterior">
+    <img src="/{{dirroot}}/local/asistencia/pix/completar_asistencia_anterior_hover.svg" class="img-hover" alt="Completar asistencia anterior hover">
+  </a>
+
+  <!-- Histórico -->
+  <a href="/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page=1&info=h&range=0" class="image-button">
+    <img src="/{{dirroot}}/local/asistencia/pix/historico.svg" class="img-normal" alt="Histórico">
+    <img src="/{{dirroot}}/local/asistencia/pix/historico_hover.svg" class="img-hover" alt="Histórico hover">
+  </a>
+
+  <!-- Listar actividades -->
+  {{#config}}
+  <a href="/{{dirroot}}/local/asistencia/activities.php?courseid={{courseid}}" class="image-button">
+    <img src="/{{dirroot}}/local/asistencia/pix/listar_actividades.svg" class="img-normal" alt="Listar actividades">
+    <img src="/{{dirroot}}/local/asistencia/pix/listar_actividades_hover.svg" class="img-hover" alt="Listar actividades hover">
+  </a>
+  {{/config}}
+</div>
+
+
+</div>

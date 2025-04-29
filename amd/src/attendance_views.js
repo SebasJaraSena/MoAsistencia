@@ -21,40 +21,40 @@
  **/
 
 
-define(['jquery'], function($) {
+define(['jquery'], function ($) {
     function tableStickyColumns(percent) {
         const table = document.getElementById('attendance-table');
         if (!table) return;
-    
+
         const isSmallScreen = window.innerWidth <= 768;
         const headerRow = table.querySelector('thead tr');
         const headerCells = Array.from(headerRow.children);
         const rows = Array.from(table.querySelectorAll('tbody tr'));
-    
+
         // Paso 1: calcular los "left" de cada columna sticky
         let leftOffsets = [];
         let accumulatedLeft = 0;
-    
+
         headerCells.forEach((th, index) => {
             if (!th.classList.contains('sticky-column')) {
                 leftOffsets.push(null);
                 return;
             }
-    
-            const width = th.offsetWidth;
+
             if (isSmallScreen && index > 0) {
-                leftOffsets.push(null); // no sticky para otras columnas
+                leftOffsets.push(null);
                 return;
             }
-    
+
+            const width = th.getBoundingClientRect().width || 150;
             leftOffsets.push(accumulatedLeft);
             accumulatedLeft += width;
         });
-    
+
         // Paso 2: aplicar a los TH
         headerCells.forEach((th, index) => {
             if (!th.classList.contains('sticky-column')) return;
-    
+
             if (leftOffsets[index] === null) {
                 th.style.position = 'static';
                 th.style.left = '';
@@ -67,15 +67,15 @@ define(['jquery'], function($) {
                 th.style.fontSize = '14px';
             }
         });
-    
+
         // Paso 3: aplicar a los TD por fila
         rows.forEach(row => {
             const cells = Array.from(row.children);
             cells.forEach((td, index) => {
                 if (!td.classList.contains('sticky-column')) return;
-    
+
                 const text = td.innerText.trim();
-    
+
                 if (leftOffsets[index] === null) {
                     td.style.position = 'static';
                     td.style.left = '';
@@ -85,7 +85,7 @@ define(['jquery'], function($) {
                     td.style.left = `${leftOffsets[index]}px`;
                     td.style.zIndex = 1;
                 }
-    
+
                 // Color de fondo por estado
                 if (text === 'SUSPENDIDO') {
                     td.style.backgroundColor = '#fcefdc';
@@ -96,10 +96,17 @@ define(['jquery'], function($) {
                 }
             });
         });
+        // Paso 4: ajustar el ancho mínimo de la tabla si hay pocas columnas
+        const visibleHeaderCells = headerCells.filter(cell => cell.offsetParent !== null); // solo visibles
+        if (visibleHeaderCells.length <= 7) {
+            table.style.minWidth = '100%';
+            table.style.width = '100%';
+        } else {
+            table.style.minWidth = 'auto';
+            table.style.width = 'auto';
+        }
+
     }
-    
-    
-    
 
     function waitForElement(selector, callback) {
         const interval = setInterval(() => {
