@@ -27,8 +27,9 @@ Example context (json):
 
 <div class="mx-1">
     <button type="button" class="btn btn-primary"
-           onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">Regresar al
-                menu</button>
+           onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'"><i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>Regresar al
+                menu
+                </button>
 </div>
 <div class="container justify-content-end">
 
@@ -146,7 +147,8 @@ Example context (json):
             {{^close}}
             <input type="hidden" name="close" value="1">
             <button type="submit" id="saveButton" class="btn btn-primary my-button"
-                {{#close}}disabled{{/close}}>Guardar</button>
+                {{#close}}disabled{{/close}}><i class="fa-solid fa-floppy-disk"></i>
+Guardar</button>
             {{/close}}
         </div>
         <div>

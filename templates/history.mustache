@@ -26,8 +26,10 @@ Example context (json):
 }}
 <div class="mx-1 my-2">
     <button type="button" class="btn btn-primary"
-           onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">Regresar al
-                menu</button>
+           onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">
+           <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
+
+           Regresar al menu</button>
 </div>
 <div class="container">
     <!-- Primera fila: Botones principales -->
@@ -61,7 +63,8 @@ Example context (json):
                 </div>
 
                 <div>
-                    <button type="submit" class="btn btn-primary mt-2">Filtrar fecha</button>
+                    <button type="submit" class="btn btn-primary mt-2"><i class="fa-solid fa-filter" style="margin-right: 8px;"></i> Filtrar
+Filtrar fecha</button>
                 </div>
             </form>
         </div>
@@ -73,7 +76,9 @@ Example context (json):
         <div class="col-md-auto d-flex gap-2 g-2 my-2">
             <button type="button" class="btn btn-primary "
                 onclick="location.href='/{{dirroot}}/local/asistencia/downloader.php?courseid={{courseid}}&cumulous={{range}}&initialdate={{initial_value}}&finaldate={{final_value}}'">
-                Descargar reporte
+               <i class="fa-regular fa-circle-down" style="margin-right: 8px;"></i>
+               
+                  <span> Descargar reporte</span>
             </button>
             <button type="button" class="btn btn-primary mx-2 hidden"
                 onclick="location.href='/{{dirroot}}/local/asistencia/detailed_report_downloader.php?courseid={{courseid}}&cumulous={{range}}&initialdate={{initial_value}}&finaldate={{final_value}}'"
@@ -86,13 +91,14 @@ Example context (json):
         <div class="col-md-auto my-2">
             <button type="button" class="btn btn-primary"
                 onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page={{page}}&info=h&initial={{initial}}&final={{final}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}&range={{#range}}0{{/range}}{{^range}}1{{/range}}'">
-                Mostrar {{^range}}consolidado de{{/range}}{{#range}}mi{{/range}} asistencia {{^range}}por todos los
+                <i class="fa-solid fa-table" style="margin-right: 8px;"></i>Mostrar {{^range}}consolidado de{{/range}}{{#range}}mi{{/range}} asistencia {{^range}}por todos los
                 instructores{{/range}}
             </button>
-            <button type="button" class="btn btn-primary"
+             <button type="button" class="btn btn-primary"
                 onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&info=h&page=1&initial={{initial}}&final={{final}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}{{#range}}&range=1{{/range}}{{^range}}&range=0{{/range}}{{#limit}}&limit=0{{/limit}}{{^limit}}&limit=1&page=1{{/limit}}'">
-                {{#limit}}Ver listado completo{{/limit}}{{^limit}}Ver paginado{{/limit}}
+                {{#limit}}  <i class="fa-solid fa-list" style="margin-right: 8px;"></i>Ver listado completo{{/limit}}{{^limit}}<i class="fa-solid fa-file-alt"style="margin-right: 8px;"></i>Ver paginado{{/limit}}
             </button>
+
         </div>
     </div>
 </div>

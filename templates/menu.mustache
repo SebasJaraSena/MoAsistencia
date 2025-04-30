@@ -15,6 +15,7 @@ context (json): { } }}
     class="btn btn-primary"
     onclick="location.href='/{{dirroot}}/course/view.php?id={{courseid}}'"
   >
+  <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
     Volver al curso
   </button>
 </div>
@@ -23,19 +24,18 @@ context (json): { } }}
   <div class="button-container">
     <h2>{{titulo}}</h2>
     <div class="button-group">
-      <button
-        type="button"
-        class="btn btn-primary btn-custom"
-        onclick="location.href='/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page=1'"
-      >
-        Asistencia general
-      </button>
+        <button class="btn btn-primary btn-custom"
+        onclick="location.href='/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page=1'">
+  <i class="fa-solid fa-list-check" style="margin-right: 8px;"></i>
+  <span>Asistencia general</span>
+</button>
       <button
         type="button"
         class="btn btn-primary btn-custom"
         onclick="location.href='/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&page=1&info=p'"
       >
-        Completar asistencia anterior
+      <i class="fa-solid fa-list-check" style="margin-right: 8px;"></i>
+       <span> Completar asistencia anterior</span>
       </button>
     </div>
     <div class="button-group">
@@ -44,7 +44,8 @@ context (json): { } }}
         class="btn btn-primary btn-custom"
         onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page=1&info=h&range=0'"
       >
-        Histórico
+      <i class="fa-solid fa-clock-rotate-left"style="margin-right: 8px;"></i>
+       <span> Histórico </span>
       </button>
       {{#config}}
       <button
@@ -52,7 +53,8 @@ context (json): { } }}
         class="btn btn-primary btn-custom"
         onclick="location.href='/{{dirroot}}/local/asistencia/activities.php?courseid={{courseid}}'"
       >
-        Listar actividades
+        <i class="fa-solid fa-check" style="margin-right: 8px;"></i>
+      <span>    Listar actividades </span>
       </button>
       {{/config}}
     </div>
