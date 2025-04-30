@@ -18,7 +18,7 @@
  * Plugin capabilities for the local_auto_inscripcion plugin.
  *
  * @package   local_auto_inscripcion
- * @copyright Luis Pérez
+ * @copyright Equipo zajuna
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

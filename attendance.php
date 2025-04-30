@@ -18,7 +18,7 @@
  * Boost.
  *
  * @package    local_asistencia
- * @author     Luis Pérez
+ * @author     Equipo zajuna
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -52,7 +52,16 @@ $final = $date->format('l') == 'Sunday' ? $endweek->format("Y-m-d") : $endweek->
 
 $close = local_asistencia_external::close_validation_retard($courseid, $initial, $final);
 $context = context_course::instance($courseid);
-$currenturl = new moodle_url('/local/asistencia/index.php');
+$range = optional_param('range', 0, PARAM_INT);
+
+$params = [
+    'courseid' => $courseid,
+    'page' => $attendancepage,
+    'range' => $range
+];
+
+$currenturl = new moodle_url('/local/asistencia/attendance.php', $params);
+
 $dircomplement = explode("/", $currenturl->get_path());
 $PAGE->set_url($currenturl);
 $PAGE->set_context($context);

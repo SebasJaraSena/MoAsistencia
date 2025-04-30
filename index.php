@@ -18,7 +18,7 @@
  * Boost.
  *
  * @package    local_asistencia
- * @author     Luis Pérez
+ * @author     Equipo zajuna
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -42,7 +42,10 @@ $courseid = $_GET['courseid'];
 
 $close = local_asistencia_external::close_validation($courseid);
 $context = context_course::instance($courseid);
-$currenturl = new moodle_url('/local/asistencia/index.php');
+$courseid = required_param('courseid', PARAM_INT); 
+
+$params = ['courseid' => $courseid];
+$currenturl = new moodle_url('/local/asistencia/index.php', $params);
 $dircomplement = explode("/", $currenturl->get_path());
 $PAGE->set_url($currenturl);
 $PAGE->set_context($context);
@@ -51,9 +54,6 @@ $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init')
 $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array('v' => time())));
 
 require_capability('local/asistencia:view', $context);
-
-//$pageurl = $attendancepage-1??0;
-//$currentpage = $pageurl+1;
 
 local_asistencia_setup_breadcrumb('Menu');
 $course = get_course($courseid);

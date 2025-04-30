@@ -18,7 +18,7 @@
  * Boost.
  *
  * @package    local_asistencia
- * @author     Luis Pérez
+ * @author     Equipo zajuna
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -39,9 +39,25 @@ $userid = $USER->id;
 $attendancepage = $_GET['page'] ?? 1;
 $courseid = $_GET['courseid'];
 $limit = $_GET['limit'] ?? 1;
-$currenturl = new moodle_url('/local/asistencia/history.php');
+
+$params = [
+    'courseid' => $courseid,
+    'page' => $attendancepage,
+    'limit' => $limit,
+    'day' => $day,
+    'week' => $week,
+    'range_dates' => $range_dates,
+    'initial' => $_GET['initial'] ?? null,
+    'final' => $_GET['final'] ?? null,
+    'range' => $_GET['range'] ?? null
+];
+
+$currenturl = new moodle_url('/local/asistencia/history.php', array_filter($params));
+$PAGE->set_url($currenturl);
 $dircomplement = explode("/", $currenturl->get_path());
 $context = context_course::instance($courseid);
+
+
 $PAGE->set_url($currenturl);
 $PAGE->set_context($context);
 $PAGE->set_title('Históricos Asistencia');

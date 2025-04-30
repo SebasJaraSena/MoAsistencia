@@ -4,23 +4,20 @@ defined('MOODLE_INTERNAL') || die();
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/externallib.php');
 
-function local_asistencia_extend_navigation_course($navigation, $course, $context)
-{
-    global $DB, $USER;
-    // Asegúrate de que el usuario tiene permisos para ver este enlace.
-    if (has_capability('moodle/course:manageactivities', $context)) {
-        // Crea la URL para el enlace, incluyendo el courseid.
-        $url = new moodle_url('/local/asistencia/index.php', array('courseid' => $course->id, 'page' => 1));
-
-        // Añade el enlace al menú de administración del curso.
-        $navigation->add(
-            get_string('pluginname', 'local_asistencia'),
-            $url,
-            navigation_node::TYPE_SETTING,
-            null,
-            'local_asistencia'
-        );
+function local_asistencia_extend_navigation_course($navigation, $course, $context) {
+    if (!has_capability('local/asistencia:view', $context)) {
+        return;
     }
+
+    $url = new moodle_url('/local/asistencia/index.php', ['courseid' => $course->id]);
+
+    $navigation->add(
+        get_string('pluginname', 'local_asistencia'),
+        $url,
+        navigation_node::TYPE_CUSTOM,
+        null,
+        'local_asistencia'
+    );
 }
 function local_asistencia_setup_breadcrumb($page_title)
 {
@@ -49,12 +46,6 @@ function local_asistencia_setup_breadcrumb($page_title)
         ];
     }
 
-    // **Eliminar duplicados por URL filtrada**
-   /*  foreach ($SESSION->asistencia_breadcrumb as $key => $breadcrumb) {
-        if ($breadcrumb['url'] === $currenturl->out(false)) {
-            unset($SESSION->asistencia_breadcrumb[$key]);
-        }
-    } */
    // **Eliminar duplicados por URL filtrada**
     foreach ($SESSION->asistencia_breadcrumb as $key => $breadcrumb) {
         if ($breadcrumb['url'] === $currenturl->out(false) || $breadcrumb['name'] === $page_title) {

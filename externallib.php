@@ -18,7 +18,7 @@
  * Plugin capabilities for the block_asistencia plugin.
  *
  * @package   local_asistencia
- * @copyright Luis Pérez
+ * @copyright Equipo zajuna
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

@@ -22,19 +22,20 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Asistencia';
-$string['asistencia'] = 'Asistencia';
-$string['asistencia:manage'] = 'Manage Asistenica local';
-$string['asistencia:view'] = 'View the Asistencia local';
-$string['error'] = 'El código de centro de formación es requerido.';
-$string['buttonlabel'] = 'Cambiar rango de fecha';
-$string['dbhost'] = 'Host:';
-$string['dbport'] = 'Puerto:';
-$string['dbname'] = 'Nombre de la base de datos:';
-$string['dbuser'] = 'Usuario:';
-$string['dbpassword'] = 'Contraseña:';
-$string['dbschema'] = 'Esquema:';
-$string['dbtablename'] = 'Nombre de la tabla:';
-$string['dbtablefieldname'] = 'Nombre del campo en la tabla:';
-$string['namefilter'] = 'Filtro por nombre';
-$string['pluginmanagetitle'] = 'Configuración de base de datos externa';
+ $string['pluginname'] = 'Asistencia';
+ $string['asistencia'] = 'Asistencia';
+ $string['asistencia:manage'] = 'Gestionar Asistencia local';
+ $string['asistencia:view'] = 'Ver Asistencia local';
+ $string['error'] = 'El código de centro de formación es requerido.';
+ $string['buttonlabel'] = 'Cambiar rango de fecha';
+ $string['dbhost'] = 'Host:';
+ $string['dbport'] = 'Puerto:';
+ $string['dbname'] = 'Nombre de la base de datos:';
+ $string['dbuser'] = 'Usuario:';
+ $string['dbpassword'] = 'Contraseña:';
+ $string['dbschema'] = 'Esquema:';
+ $string['dbtablename'] = 'Nombre de la tabla:';
+ $string['dbtablefieldname'] = 'Nombre del campo en la tabla:';
+ $string['namefilter'] = 'Filtro por nombre';
+ $string['pluginmanagetitle'] = 'Configuración de base de datos externa';
+ 
