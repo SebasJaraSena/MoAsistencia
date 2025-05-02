@@ -47,70 +47,81 @@ Cada cambio registrado incluye:
 ### Cambio #003
 - **ID**: CHG-003
 - **Fecha**: 26/12/2024
-- **Descripción**: Implementación de validación de asistencia
+- **Descripción**: Implementación de validación de asistencia y retrasos
 - **Componentes Afectados**:
   - Archivo: `classes/external/fetch_students.php`
   - Archivo: `externallib.php`
+  - Archivo: `attendance.php`
 - **Impacto**: Alto
 - **Validación**:
   - Pruebas de cierre de asistencia
   - Verificación de permisos
   - Validación de fechas
+  - Validación de retrasos
 - **Estado**: Completado
 
 ### Cambio #004
 - **ID**: CHG-004
 - **Fecha**: 26/12/2024
-- **Descripción**: Implementación de exportación de reportes
+- **Descripción**: Implementación de exportación de reportes detallados
 - **Componentes Afectados**:
   - Archivo: `classes/util/report_downloader.php`
   - Archivo: `classes/util/detail_report_downloader.php`
+  - Archivo: `detailed_report_downloader.php`
 - **Impacto**: Medio
 - **Validación**:
-  - Verificación de formatos de exportación
+  - Verificación de formatos de exportación (CSV y PDF)
   - Pruebas con diferentes conjuntos de datos
   - Validación de permisos de descarga
+  - Pruebas de generación de reportes detallados
 - **Estado**: Completado
 
 ### Cambio #005
 - **ID**: CHG-005
 - **Fecha**: 26/12/2024
-- **Descripción**: Integración con base de datos externa
+- **Descripción**: Integración con base de datos externa y gestión de actividades
 - **Componentes Afectados**:
   - Archivo: `classes/external/foreing_db_connection.php`
   - Archivo: `manage.php`
+  - Archivo: `activities.php`
 - **Impacto**: Alto
 - **Validación**:
   - Pruebas de conexión
   - Validación de consultas
   - Manejo de errores
+  - Pruebas de gestión de actividades
 - **Estado**: Completado
 
 ### Cambio #006
 - **ID**: CHG-006
 - **Fecha**: 26/12/2024
-- **Descripción**: Implementación de validación de formularios
+- **Descripción**: Implementación de validación de formularios y observaciones
 - **Componentes Afectados**:
   - Archivo: `classes/form/edit.php`
+  - Archivo: `attendance.php`
+  - Archivo: `amd/src/attendance_observations.js`
 - **Impacto**: Medio
 - **Validación**:
   - Pruebas de validación de datos
   - Verificación de mensajes de error
   - Pruebas de seguridad de entrada
+  - Validación de sistema de observaciones
 - **Estado**: Completado
 
 ### Cambio #007
 - **ID**: CHG-007
 - **Fecha**: 26/12/2024
-- **Descripción**: Implementación de interfaz JavaScript para asistencia
+- **Descripción**: Implementación de interfaz JavaScript para asistencia y navegación
 - **Componentes Afectados**:
   - Archivo: `amd/src/attendance_observations.js`
   - Archivo: `amd/src/attendance_views.js`
+  - Archivo: `lib.php`
 - **Impacto**: Medio
 - **Validación**:
   - Pruebas de interfaz
   - Validación de selección de horas
   - Pruebas de compatibilidad de navegadores
+  - Validación de sistema de navegación
 - **Estado**: Completado
 
 ## Matriz de Impacto de Cambios
@@ -121,9 +132,9 @@ Cada cambio registrado incluye:
 | CHG-002 | Sistema de caché | ✓✓✓ | - | - | ✓ |
 | CHG-003 | Validación asistencia | - | ✓ | ✓✓ | ✓✓✓ |
 | CHG-004 | Exportación reportes | ✓ | ✓✓✓ | - | ✓ |
-| CHG-005 | DB externa | ✓ | - | ✓✓ | ✓✓ |
+| CHG-005 | DB externa y actividades | ✓ | ✓ | ✓✓ | ✓✓ |
 | CHG-006 | Validación formularios | - | ✓ | ✓✓✓ | ✓✓ |
-| CHG-007 | JavaScript UI | ✓ | ✓✓✓ | - | - |
+| CHG-007 | JavaScript UI y navegación | ✓ | ✓✓✓ | - | ✓ |
 
 *Nota: ✓=Impacto bajo, ✓✓=Impacto medio, ✓✓✓=Impacto alto*
 

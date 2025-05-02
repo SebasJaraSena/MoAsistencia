@@ -8,6 +8,8 @@
 5. [Protección de Sesiones](#protección-de-sesiones)
 6. [Auditoría y Logging](#auditoría-y-logging)
 7. [Respuesta a Incidentes](#respuesta-a-incidentes)
+8. [Seguridad en Caché](#seguridad-en-caché)
+9. [Seguridad en Observaciones](#seguridad-en-observaciones)
 
 ## Introducción
 
@@ -88,6 +90,11 @@ class input_validator {
         // Sanitizar observaciones
         $data['observations'] = clean_param($data['observations'], PARAM_TEXT);
         
+        // Validar retrasos
+        if (isset($data['retard'])) {
+            self::validate_retard($data['retard']);
+        }
+        
         return $data;
     }
 }
@@ -98,6 +105,9 @@ class input_validator {
 // En templates y salida HTML
 $output = format_text($data, FORMAT_HTML, ['trusted' => false]);
 echo clean_text($output);
+
+// En observaciones
+$observations = clean_param($observations, PARAM_TEXT);
 ```
 
 ## Seguridad en Base de Datos
@@ -114,7 +124,7 @@ public static function get_attendance_records($courseid, $studentid) {
     ];
     
     // Usar API de Moodle para consultas
-    return $DB->get_records('local_asistencia', $params);
+    return $DB->get_records('local_asistencia_permanente', $params);
 }
 ```
 
@@ -128,7 +138,7 @@ public static function save_attendance_batch($records) {
         
         foreach ($records as $record) {
             self::validate_attendance_data($record);
-            $DB->insert_record('local_asistencia', $record);
+            $DB->insert_record('local_asistencia_permanente', $record);
         }
         
         $transaction->allow_commit();
@@ -147,6 +157,11 @@ require_sesskey(); // Para operaciones POST
 
 // Validación en formularios
 $mform->addElement('hidden', 'sesskey', sesskey());
+
+// Manejo de breadcrumbs
+if (!isset($SESSION->asistencia_breadcrumb)) {
+    $SESSION->asistencia_breadcrumb = [];
+}
 ```
 
 ### 2. Prevención de CSRF
@@ -192,42 +207,87 @@ public static function monitor_suspicious_activity($userid) {
 }
 ```
 
+## Seguridad en Caché
+
+### 1. Manejo de Caché
+```php
+// Implementación segura de caché
+$cache = cache::make('local_asistencia', 'coursestudentslist');
+$cache->set("course$courseid.user$userid", $condition);
+
+// Limpieza de caché
+$cache->delete("course$courseid.user$userid");
+```
+
+### 2. Protección de Datos en Caché
+```php
+// Sanitización de datos antes de almacenar en caché
+$cachedata = clean_param($data, PARAM_RAW);
+$cache->set($key, $cachedata);
+```
+
+## Seguridad en Observaciones
+
+### 1. Validación de Observaciones
+```php
+public static function validate_observations($observations) {
+    // Limitar longitud
+    if (strlen($observations) > 500) {
+        throw new invalid_parameter_exception('Las observaciones exceden el límite de caracteres');
+    }
+    
+    // Sanitizar contenido
+    return clean_param($observations, PARAM_TEXT);
+}
+```
+
+### 2. Manejo de Observaciones en JavaScript
+```javascript
+// En attendance_observations.js
+define(['jquery'], function($) {
+    return {
+        init: function() {
+            // Validación en cliente
+            $('#observations').on('input', function() {
+                if ($(this).val().length > 500) {
+                    // Mostrar error
+                }
+            });
+        }
+    };
+});
+```
+
 ## Respuesta a Incidentes
 
 ### 1. Manejo de Errores
 ```php
 public static function handle_security_incident($error, $context) {
     // Registrar incidente
-    debugging('[Security Alert] ' . $error->getMessage(), DEBUG_DEVELOPER);
+    self::log_security_incident($error, $context);
+    
+    // Limpiar caché si es necesario
+    if ($error->getCode() === 'cache_compromise') {
+        self::clear_compromised_cache();
+    }
     
     // Notificar administradores
-    $admins = get_admins();
-    foreach ($admins as $admin) {
-        $message = new \core\message\message();
-        $message->component = 'local_asistencia';
-        $message->name = 'security_incident';
-        $message->userfrom = get_admin();
-        $message->userto = $admin;
-        $message->subject = 'Alerta de Seguridad';
-        $message->fullmessage = $error->getMessage();
-        message_send($message);
-    }
+    self::notify_admins($error);
 }
 ```
 
-### 2. Plan de Recuperación
+### 2. Procedimientos de Recuperación
 ```php
-public static function emergency_recovery($courseid) {
-    global $DB;
-    
-    // Backup de datos críticos
-    $records = $DB->get_records('local_asistencia', ['courseid' => $courseid]);
-    self::create_emergency_backup($records);
-    
-    // Restaurar último estado válido
-    $lastValidState = self::get_last_valid_state($courseid);
-    if ($lastValidState) {
-        self::restore_attendance_state($lastValidState);
+public static function recover_from_incident($incident_type) {
+    switch ($incident_type) {
+        case 'cache_compromise':
+            self::clear_all_cache();
+            self::rebuild_cache();
+            break;
+        case 'data_corruption':
+            self::restore_from_backup();
+            self::validate_data_integrity();
+            break;
     }
 }
 ```

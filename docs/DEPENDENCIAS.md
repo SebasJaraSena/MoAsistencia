@@ -43,6 +43,11 @@
    local_asistencia/attendance_observations
    ```
 
+2. **Vistas de Asistencia**
+   ```javascript
+   local_asistencia/attendance_views
+   ```
+
 ## Namespaces y Clases Utilizadas
 
 ### Core Moodle
@@ -52,6 +57,7 @@ use core\plugininfo\local;
 use core_calendar\local\event\forms\create;
 use core_php_time_limit;
 use block_rss_client\output\item;
+use core\cache;
 ```
 
 ### Sistema de Caché
@@ -61,6 +67,7 @@ $cache = cache::make('local_asistencia', 'coursestudentslist');
 - Modo: `MODE_SESSION`
 - TTL: 10 segundos
 - Tipo: Simple Data (JSON serializable)
+- Uso: Almacenamiento de listas de estudiantes y registros de asistencia
 
 ## Dependencias Frontend
 
@@ -74,13 +81,15 @@ $cache = cache::make('local_asistencia', 'coursestudentslist');
 - Templates principales:
   - `manage`
   - `error`
+  - `attendance`
+  - `history`
 
 ## Integraciones
 
 ### Base de Datos
 1. **Moodle DB**
    - Tablas principales:
-     - `local_asistencia`
+     - `local_asistencia_permanente`
      - `local_asistencia_config`
      - `local_asistencia_logs`
 
@@ -88,6 +97,7 @@ $cache = cache::make('local_asistencia', 'coursestudentslist');
    - Tipo: PostgreSQL
    - Conexión: PDO
    - Configuración: Dinámica vía tabla `local_asistencia_config`
+   - Clase: `foreing_db_connection.php`
 
 ## Capacidades (Capabilities)
 
@@ -110,6 +120,8 @@ $capabilities = [
 ### PHP
 - PDO Extension
 - PostgreSQL Extension
+- JSON Extension
+- DateTime Extension
 
 ### Base de Datos
 - MySQL/MariaDB (Moodle)
@@ -118,6 +130,12 @@ $capabilities = [
 ### Servidor Web
 - Soporte para sesiones PHP
 - Soporte para caché
+- Soporte para JavaScript (AMD modules)
+
+### Navegadores Web
+- Soporte para JavaScript moderno
+- Soporte para CSS3
+- Soporte para JSON
 
 ---
 **Nota**: Este documento refleja las dependencias actualmente implementadas en el sistema. 
