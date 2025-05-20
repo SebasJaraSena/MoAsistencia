@@ -25,6 +25,6 @@
 
  defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2024122506;                // Current version
+$plugin->version   = 2025051907;                // Current version
 $plugin->requires  = 2023100400;                // Requires this Moodle version
 $plugin->component = 'local_asistencia';  // Full name of plugin

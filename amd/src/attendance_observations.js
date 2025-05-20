@@ -1,6 +1,6 @@
-define(['jquery'], function($) {
+define(['jquery'], function ($) {
     return {
-        init: function() {
+        init: function () {
             // Mostrar/ocultar inputs según selección de asistencia
             $('body').on('change', '.form-select', function () {
                 const selectedValue = $(this).val();
@@ -33,6 +33,15 @@ define(['jquery'], function($) {
                     } else {
                         inputContainer.hide();
                     }
+
+                });
+
+                $('#saveButtonWrapper').on('click', function () {
+                    const wrapper = document.getElementById('saveButtonWrapper');
+                    const btn = document.getElementById('saveButton');
+                    if (wrapper.classList.contains('disabled-click') || btn.disabled) return;
+
+                    $('#modal1').modal('show');
                 });
 
                 document.querySelectorAll('select.form-select, .extra-input').forEach(el => {
@@ -56,18 +65,38 @@ define(['jquery'], function($) {
             }
 
             function checkAllHours2() {
-                let allSelected = true;
-                $('.form-select').each(function () {
-                    const option = $(this).val();
-                    const value = $(this).parent().children().eq(2).children().first().val();
-                    const numberValue = parseInt(value);
-                    if ((numberValue < 1 || numberValue > 10 || value === '') && (option != '1' && option != '-8')) {
-                        allSelected = false;
-                        return false;
+                let allValid = true;
+                document.querySelectorAll('td.select-container').forEach(cell => {
+                    const select = cell.querySelector('select.form-select');
+                    if (!select) return;
+                    const value = select.value;
+                    const horas = parseInt(cell.querySelector('input[name^="extrainfoNum"]').value);
+                    if (['0', '2', '3'].includes(value)) {
+                        if (isNaN(horas) || horas < 1 || horas > 10) {
+                            allValid = false;
+                        }
                     }
                 });
-                $('#saveButton').prop('disabled', !allSelected);
+
+                const saveButton = document.getElementById('saveButton');
+                const warning = document.getElementById('saveWarning');
+
+                saveButton.disabled = !allValid;
+                if (!allValid) {
+                    warning.style.display = 'block';
+                } else {
+                    warning.style.display = 'none';
+                }
             }
+
+
+            window.handleSaveClick = function () {
+                const wrapper = document.getElementById('saveButtonWrapper');
+                const btn = document.getElementById('saveButton');
+                if (wrapper.classList.contains('disabled-click') || btn.disabled) return;
+
+                $('#modal1').modal('show'); // o location.href = '#modal1';
+            };
 
             function checkAllHours() {
                 let allValid = true;
@@ -82,7 +111,16 @@ define(['jquery'], function($) {
                         }
                     }
                 });
-                document.getElementById('saveButton').disabled = !allValid;
+
+                const saveButton = document.getElementById('saveButton');
+                const warning = document.getElementById('saveWarning');
+
+                saveButton.disabled = !allValid;
+                if (!allValid) {
+                    warning.style.display = 'block';
+                } else {
+                    warning.style.display = 'none';
+                }
             }
 
             // Fecha rango
@@ -142,6 +180,7 @@ define(['jquery'], function($) {
                 }
                 window.onload = adjustTableSize;
             }
+
         }
     };
 });

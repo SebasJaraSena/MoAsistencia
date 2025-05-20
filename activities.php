@@ -33,11 +33,9 @@
  
  require_login();
  
- // 🛡️ Obtener parámetros de forma segura
  $courseid = required_param('courseid', PARAM_INT);
  $pageurl = optional_param('page', 1, PARAM_INT);
  
- // ✅ Crear URL con parámetros para mantenerlos al activar edición
  $params = [
      'courseid' => $courseid,
      'page' => $pageurl
@@ -52,8 +50,6 @@
  $PAGE->set_title('Actividades');
  $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
  $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', ['v' => time()]));
- 
- require_capability('local/asistencia:view', $context);
  
  $dbname = $DB->get_record('local_asistencia_config', ['name' => 'dbname'])->value;
  

@@ -24,13 +24,16 @@
     }
 }}
 
-<div class=" my-4">
-    <button type="button" class="btn btn-primary"
-           onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">
-           <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
-           Regresar al menu</button>
+<div class="d-flex justify-content-start ml-4 my-2">
+  <div class="position-relative d-inline-block" onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'" style="cursor: pointer;">
+    <button type="button" class="btn btn-custom btn-small">
+      Menú
+    </button>
+    <span class="icon-circle-overlap">
+      <i class="fa-solid fa-arrow-left"></i>
+    </span>
+  </div>
 </div>
-
         <br>
 <div class="container fortable" style="width:auto; overflow-x: auto">
     <table class="table table-hover table-container" style="width: 100%; table-layout: fixed;">

@@ -117,25 +117,37 @@ define(['jquery'], function ($) {
         }, 100);
     }
 
-    function enableSearchWithStickyUpdate(percent) {
-        const searchInput = document.getElementById('searchInput');
-        if (!searchInput) return;
+  function enableSearchWithStickyUpdate(percent) {
+    const searchInput = document.getElementById('searchInput');
+    if (!searchInput) return;
 
-        searchInput.addEventListener('keyup', function () {
-            const filter = searchInput.value.toLowerCase();
-            const table = document.getElementById('attendance-table');
-            if (!table) return;
-            const rows = table.querySelectorAll('tbody tr');
+    searchInput.addEventListener('keyup', function () {
+        const filter = normalizeText(searchInput.value);
 
-            rows.forEach(row => {
-                const text = row.innerText.toLowerCase();
-                row.style.display = text.includes(filter) ? '' : 'none';
-            });
+        const table = document.getElementById('attendance-table');
+        if (!table) return;
 
-            // Recalcular sticky después de mostrar/ocultar
-            tableStickyColumns(percent);
+        const rows = table.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            const text = normalizeText(row.innerText);
+            row.style.display = text.includes(filter) ? '' : 'none';
         });
+
+        tableStickyColumns(percent);
+    });
+
+    // Función mejorada para normalizar texto
+    function normalizeText(text) {
+        return text
+            .trim()                            
+            .normalize("NFD")                  
+            .replace(/[\u0300-\u036f]/g, "")  
+            .toLowerCase();                   
     }
+}
+
+
 
     return {
         init: function () {
@@ -157,6 +169,6 @@ define(['jquery'], function ($) {
                 });
             });
         },
-        refreshSticky: tableStickyColumns // Por si lo necesitas externamente
+        refreshSticky: tableStickyColumns 
     };
 });

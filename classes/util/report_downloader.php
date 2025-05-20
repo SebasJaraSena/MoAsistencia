@@ -35,7 +35,7 @@ class report_donwloader
     global $DB, $USER;
 
     require_once($GLOBALS['CFG']->libdir . '/excellib.class.php');
-    $filename = 'reporte_asistencia_' . $shortname . '_' . $initialdate . '_' . $finaldate . '_' . time() . '.xlsx';
+    $filename = 'reporte_asistencia_' . $shortname . '_' . $initialdate . '_' . $finaldate . '.xlsx';
 
     // Filtrar estudiantes con asistencia
     $attendanceFound = array_filter($result, function($row) {
@@ -130,7 +130,7 @@ class report_donwloader
 
         $sheet->setCellValue('A1', "Curso: $shortname");
         $sheet->setCellValue('B1', "Fecha: $initialdate a $finaldate");
-        $sheet->setCellValue('C1', "Instructor: $instructor");
+        $sheet->setCellValue('C1', "Usuario : $instructor");
 
         $sheet->fromArray($headers, NULL, 'A2');
         $sheet->fromArray($sortedData, NULL, 'A3');

@@ -215,42 +215,41 @@ if ($final && isset($_GET['final'])) {
 $op = 1;
 $postfilter;
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") { // Processing POST requestes
-    $postfilter = $_POST['filtro_fecha'];
-    $date = new DateTime(date('Y-m-d'));
-    if ($postfilter == 'range_dates') { // Rango de fechas seleccionado por usuario
-        $day = 0;
-        $week = 0;
-        $range_dates = 1;
-        $op = 0;
-        $initialdate = isset($_POST['start-date']) ? date_create($_POST['start-date']) : $initialdate;
-        $finaldate = isset($_POST['end-date']) ? date_create($_POST['end-date']) : $finaldate;
-    } else if ($postfilter == 'week') { // Rango de fechas dado por la semana actual contando desde el lunes hasta el siguiente domingo
-        $op = 0;
-        $day = 0;
-        $week = 1;
-        $range_dates = 0;
-        $dateaux = clone $date;
-        $nextsunday = clone $date;
-        $dateaux->modify('last monday');
-        if ($dateaux->modify('+7 days')->format('Y-m-d') == $date->format('Y-m-d')) {
-            $initialdate = clone $date;
-        } else {
-            $dateaux->modify('last monday');
-            $initialdate = clone $dateaux;
-        }
+$filter_method = $_GET['filtro_fecha'] ?? ($_POST['filtro_fecha'] ?? null);
 
-        $finaldate = clone $nextsunday->modify('next sunday');
-        // Rango de fecha limitado al día actual
-    } else if ($postfilter == 'day') {
-        $op = 0;
-        $day = 1;
-        $week = 0;
-        $range_dates = 0;
+if ($filter_method === 'range_dates') {
+    $day = 0;
+    $week = 0;
+    $range_dates = 1;
+    $op = 0;
+    $initialdate = isset($_GET['initial']) ? date_create($_GET['initial']) : $initialdate;
+    $finaldate = isset($_GET['final']) ? date_create($_GET['final']) : $finaldate;
+} elseif ($filter_method === 'week') {
+    $op = 0;
+    $day = 0;
+    $week = 1;
+    $range_dates = 0;
+
+    $date = new DateTime(date('Y-m-d'));
+    $dateaux = clone $date;
+    $nextsunday = clone $date;
+    $dateaux->modify('last monday');
+    if ($dateaux->modify('+7 days')->format('Y-m-d') == $date->format('Y-m-d')) {
         $initialdate = clone $date;
-        $finaldate = clone $date;
+    } else {
+        $dateaux->modify('last monday');
+        $initialdate = clone $dateaux;
     }
+    $finaldate = clone $nextsunday->modify('next sunday');
+} elseif ($filter_method === 'day') {
+    $op = 0;
+    $day = 1;
+    $week = 0;
+    $range_dates = 0;
+    $initialdate = new DateTime();
+    $finaldate = new DateTime();
 }
+
 
 $form = new edit();
 $condition = '';

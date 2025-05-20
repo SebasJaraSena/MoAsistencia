@@ -24,49 +24,56 @@ Example context (json):
 
 }
 }}
-<div class="mx-1 my-2">
-    <button type="button" class="btn btn-primary"
-           onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'">
-           <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
-
-           Regresar al menu</button>
+<div class="d-flex justify-content-start ml-4 my-2">
+  <div class="position-relative d-inline-block" onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'" style="cursor: pointer;">
+    <button type="button" class="btn btn-custom btn-small">
+      Menú
+    </button>
+    <span class="icon-circle-overlap">
+      <i class="fa-solid fa-arrow-left"></i>
+    </span>
+  </div>
 </div>
+<br>
 <div class="container">
     <!-- Primera fila: Botones principales -->
     
     <!-- Filtro de fechas -->
     <div class="row mb-4">
         <div class="col-md-12">
-            <form
-                action="./history.php?courseid={{courseid}}&page={{currentpage}}&info=h&range={{range}}&limit={{limit}}&initial={{initial}}&final={{final}}"
-                method="POST" class="d-grid gap-2">
-                <div class="mb-2">
-                    <select class="custom-select" id="date-range-select" name="filtro_fecha">
-                        <option value="0" {{#option}}selected{{/option}}>Seleccione una opción</option>
-                        <option value="day" {{#day}}selected{{/day}}>Día</option>
-                        <option value="week" {{#week}}selected{{/week}}>Semana actual</option>
-                        <option value="range_dates" {{#range_dates}}selected{{/range_dates}}>Rango de fechas</option>
-                    </select>
-                </div>
+           <form action="./history.php" method="GET" class="d-grid gap-2">
+    <input type="hidden" name="courseid" value="{{courseid}}">
+    <input type="hidden" name="info" value="h">
+    <input type="hidden" name="range" value="{{range}}">
+    <input type="hidden" name="limit" value="{{limit}}">
 
-                <div id="date-inputs-container" class="row g-3 align-items-center" style="display: none;">
-                    <div class="col-auto">
-                        <label for="start-date">Fecha de inicio:</label>
-                        <input class="form-control" type="date" id="start-date" name="start-date"
-                            value="{{initial_value}}" max="{{finaldate}}">
-                    </div>
-                    <div class="col-auto">
-                        <label for="end-date">Fecha de fin:</label>
-                        <input class="form-control" type="date" id="end-date" name="end-date" value="{{final_value}}"
-                            min="{{initialdate}}">
-                    </div>
-                </div>
+    <div class="mb-2">
+        <select class="custom-select" id="date-range-select" name="filtro_fecha">
+            <option value="0" {{#option}}selected{{/option}}>Seleccione una opción</option>
+            <option value="day" {{#day}}selected{{/day}}>Día</option>
+            <option value="week" {{#week}}selected{{/week}}>Semana actual</option>
+            <option value="range_dates" {{#range_dates}}selected{{/range_dates}}>Rango de fechas</option>
+        </select>
+    </div>
 
-                <div>
-                    <button type="submit" class="btn btn-primary mt-2"><i class="fa-solid fa-filter" style="margin-right: 8px;"></i> Filtrar
-Filtrar fecha</button>
-                </div>
-            </form>
+    <div id="date-inputs-container" class="row g-3 align-items-center" style="display: none;">
+        <div class="col-auto">
+            <label for="start-date">Fecha de inicio:</label>
+            <input class="form-control" type="date" id="start-date" name="initial" value="{{initial_value}}" max="{{finaldate}}">
+        </div>
+        <div class="col-auto">
+            <label for="end-date">Fecha de fin:</label>
+            <input class="form-control" type="date" id="end-date" name="final" value="{{final_value}}" min="{{initialdate}}">
+        </div>
+    </div>
+
+    <div>
+        <button type="submit" id="color_btn" class="btn btn-primary mt-2">
+            <i class="fa-solid fa-filter" style="margin-right: 8px;"></i> Filtrar fecha
+        </button>
+    </div>
+</form>
+
         </div>
     </div>
 
@@ -74,7 +81,7 @@ Filtrar fecha</button>
     <div class="row mb-3 justify-content-between">
         <!-- Botones de descarga a la izquierda -->
         <div class="col-md-auto d-flex gap-2 g-2 my-2">
-            <button type="button" class="btn btn-primary "
+            <button type="button" id="color_btn"class="btn btn-primary "
                 onclick="location.href='/{{dirroot}}/local/asistencia/downloader.php?courseid={{courseid}}&cumulous={{range}}&initialdate={{initial_value}}&finaldate={{final_value}}'">
                <i class="fa-regular fa-circle-down" style="margin-right: 8px;"></i>
                
@@ -89,12 +96,12 @@ Filtrar fecha</button>
 
         <!-- Botón de mostrar consolidado a la derecha -->
         <div class="col-md-auto my-2">
-            <button type="button" class="btn btn-primary"
+            <button type="button" class="btn btn-primary"id="color_btn"
                 onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page={{page}}&info=h&initial={{initial}}&final={{final}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}&range={{#range}}0{{/range}}{{^range}}1{{/range}}'">
                 <i class="fa-solid fa-table" style="margin-right: 8px;"></i>Mostrar {{^range}}consolidado de{{/range}}{{#range}}mi{{/range}} asistencia {{^range}}por todos los
                 instructores{{/range}}
             </button>
-             <button type="button" class="btn btn-primary"
+             <button type="button" class="btn btn-primary"id="color_btn"
                 onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&info=h&page=1&initial={{initial}}&final={{final}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}{{#range}}&range=1{{/range}}{{^range}}&range=0{{/range}}{{#limit}}&limit=0{{/limit}}{{^limit}}&limit=1&page=1{{/limit}}'">
                 {{#limit}}  <i class="fa-solid fa-list" style="margin-right: 8px;"></i>Ver listado completo{{/limit}}{{^limit}}<i class="fa-solid fa-file-alt"style="margin-right: 8px;"></i>Ver paginado{{/limit}}
             </button>
@@ -200,8 +207,9 @@ Filtrar fecha</button>
         {{^current}}
 
         <button type="button" class="btn btn-primary"
-            onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page={{page}}&info=h&initial={{initial}}&final={{final}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}&range={{range}}'"
-            {{active}}>{{page}}</button>
+    onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page={{page}}&info=h&initial={{initial_value}}&final={{final_value}}&filtro_fecha={{#day}}day{{/day}}{{#week}}week{{/week}}{{#range_dates}}range_dates{{/range_dates}}&range={{range}}&limit={{limit}}'"
+>{{page}}</button>
+
 
         {{/current}}
         {{/listpages}}

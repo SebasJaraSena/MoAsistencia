@@ -69,7 +69,7 @@ $PAGE->set_title('Lista Asistencia');
 $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
 $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array('v' => time())));
 
-require_capability('local/asistencia:view', $context);
+require_capability('local/asistencia:vergeneral', $context);
 $a = 0;
 $close = 0;
 

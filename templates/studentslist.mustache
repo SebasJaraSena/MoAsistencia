@@ -25,11 +25,16 @@ Example context (json):
 }
 }}
 
-<div class="mx-1">
-    <button type="button" class="btn btn-primary"
-           onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'"><i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>Regresar al
-                menu
-                </button>
+
+<div class="d-flex justify-content-start ml-4 my-2">
+  <div class="position-relative d-inline-block" onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'" style="cursor: pointer;">
+    <button type="button" class="btn btn-custom btn-small">
+      Volver al Menu
+    </button>
+    <span class="icon-circle-overlap">
+      <i class="fa-solid fa-arrow-left"></i>
+    </span>
+  </div>
 </div>
 <div class="container justify-content-end">
 
@@ -144,32 +149,25 @@ Example context (json):
                 </tbody>
             </table>
 
-            {{^close}}
-            <input type="hidden" name="close" value="1">
-            <button type="submit" id="saveButton" class="btn btn-primary my-button"
-                {{#close}}disabled{{/close}}><i class="fa-solid fa-floppy-disk"></i>
-Guardar</button>
+            
+        </div>
+        {{^close}}
+<div class="d-flex flex-column align-items-center ml-4 my-3">
+  <div class="position-relative d-inline-block" style="cursor: pointer;">
+    <button type="submit" id="saveButton" class="btn btn-custom btn-small">
+      Guardar
+    </button>
+    <span class="icon-circle-overlap">
+      <i class="fa-solid fa-floppy-disk"></i>
+    </span>
+  </div>
+  <div id="saveWarning" style="color: red; margin-top: 8px; display: none;">
+   Debes ingresar un tiempo, con un límite máximo de 10 horas.
+  </div>
+</div>
+
             {{/close}}
-        </div>
-        <div>
-            <br>
-            <div class="container">
-                {{#listpages}}
-                {{#current}}
-                <button type="button" class="btn btn-secondary"
-                    onclick="location.href='/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&range={{range}}&page={{page}}'"
-                    disabled>{{page}}</button>
-                {{/current}}
-                {{^current}}
-
-                <button type="button" class="btn btn-primary"
-                    onclick="location.href='/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&range={{range}}&page={{page}}'"
-                    {{active}}>{{page}}</button>
-
-                {{/current}}
-                {{/listpages}}
-            </div>
-        </div>
+        
 
         {{^close}}
         <div class="container">

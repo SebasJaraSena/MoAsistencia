@@ -6,58 +6,108 @@ hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
 warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
 General Public License for more details. You should have received a copy of the
 GNU General Public License along with Moodle. If not, see
-<http://www.gnu.org/licenses/>. }} {{! @template local_asistencia/manage Example
+<http: //www.gnu.org/licenses />. }} {{! @template local_asistencia/manage Example
 context (json): { } }}
-
-<div class="mx-1">
-  <button
-    type="button"
-    class="btn btn-primary"
-    onclick="location.href='/{{dirroot}}/course/view.php?id={{courseid}}'"
-  >
-  <i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>
-    Volver al curso
-  </button>
+<!-- Botón "Volver al curso" -->
+<div class="d-flex justify-content-start ml-4 my-2">
+  <div class="position-relative d-inline-block" onclick="location.href='/{{dirroot}}/course/view.php?id={{courseid}}'" style="cursor: pointer;">
+    <button type="button" class="btn btn-custom btn-small">
+      Volver al curso
+    </button>
+    <span class="icon-circle-overlap">
+      <i class="fa-solid fa-arrow-left"></i>
+    </span>
+  </div>
 </div>
 
-<div class="container d-grid gap-2 col-6 mx-auto">
-  <div class="button-container">
-    <h2>{{titulo}}</h2>
-    <div class="button-group">
-        <button class="btn btn-primary btn-custom"
-        onclick="location.href='/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page=1'">
-  <i class="fa-solid fa-list-check" style="margin-right: 8px;"></i>
-  <span>Asistencia general</span>
-</button>
-      <button
-        type="button"
-        class="btn btn-primary btn-custom"
+<!-- Contenedor de botones -->
+<div class="container my-5">
+  <div class="row justify-content-center">
+    
+    {{^denybutton}}
+    <!-- SI el usuario PUEDE ver los botones de asistencia -->
+    <div class="col-md-6 col-lg-4 d-flex flex-column align-items-center mb-4">
+      <!-- Botón 1 -->
+      <div class="position-relative d-inline-block mb-3"
+        onclick="location.href='/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page=1'"
+        style="cursor: pointer;">
+        <button class="btn btn-custom">
+          Asistencia general
+        </button>
+        <span class="icon-circle-overlap">
+          <i class="fa-solid fa-list-check"></i>
+        </span>
+      </div>
+
+      <!-- Botón 2 -->
+      <div class="position-relative d-inline-block mb-3"
         onclick="location.href='/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&page=1&info=p'"
-      >
-      <i class="fa-solid fa-list-check" style="margin-right: 8px;"></i>
-       <span> Completar asistencia anterior</span>
-      </button>
+        style="cursor: pointer;">
+        <button class="btn btn-custom">
+          Asistencia anterior
+        </button>
+        <span class="icon-circle-overlap">
+          <i class="fa-solid fa-calendar-check"></i>
+        </span>
+      </div>
     </div>
-    <div class="button-group">
-      <button
-        type="button"
-        class="btn btn-primary btn-custom"
+
+    <!-- Segunda columna solo si hay primera -->
+    <div class="col-md-6 col-lg-4 d-flex flex-column align-items-center mb-4">
+      <!-- Botón 3 -->
+      <div class="position-relative d-inline-block mb-3"
         onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page=1&info=h&range=0'"
-      >
-      <i class="fa-solid fa-clock-rotate-left"style="margin-right: 8px;"></i>
-       <span> Histórico </span>
-      </button>
-      {{#config}}
-      <button
-        type="button"
-        class="btn btn-primary btn-custom"
+        style="cursor: pointer;">
+        <button class="btn btn-custom">
+          Histórico
+        </button>
+        <span class="icon-circle-overlap">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+        </span>
+      </div>
+
+      <!-- Botón 4 -->
+      <div class="position-relative d-inline-block mb-3"
         onclick="location.href='/{{dirroot}}/local/asistencia/activities.php?courseid={{courseid}}'"
-      >
-        <i class="fa-solid fa-check" style="margin-right: 8px;"></i>
-      <span>    Listar actividades </span>
-      </button>
-      {{/config}}
+        style="cursor: pointer;">
+        <button class="btn btn-custom">
+          Informe calificador
+        </button>
+        <span class="icon-circle-overlap">
+          <i class="fa-solid fa-file-lines"></i>
+        </span>
+      </div>
     </div>
+    {{/denybutton}}
+
+    {{#denybutton}}
+    <!-- SI el usuario NO puede ver los botones de asistencia -->
+    <div class="col-md-8 d-flex flex-column align-items-center mb-4">
+      <!-- Botón 3 -->
+      <div class="position-relative d-inline-block mb-3"
+        onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page=1&info=h&range=0'"
+        style="cursor: pointer;">
+        <button class="btn btn-custom">
+          Histórico
+        </button>
+        <span class="icon-circle-overlap">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+        </span>
+      </div>
+
+      <!-- Botón 4 -->
+      <div class="position-relative d-inline-block mb-3"
+        onclick="location.href='/{{dirroot}}/local/asistencia/activities.php?courseid={{courseid}}'"
+        style="cursor: pointer;">
+        <button class="btn btn-custom">
+          Informe calificador
+        </button>
+        <span class="icon-circle-overlap">
+          <i class="fa-solid fa-file-lines"></i>
+        </span>
+      </div>
+    </div>
+    {{/denybutton}}
+
   </div>
-  
 </div>

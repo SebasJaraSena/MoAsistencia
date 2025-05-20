@@ -15,17 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Boost.
+ * Página principal del menú de asistencia.
  *
  * @package    local_asistencia
  * @author     Equipo zajuna
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 o posterior
  */
-
-use block_rss_client\output\item;
-use core\plugininfo\local;
-
-use function PHPSTORM_META\type;
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/externallib.php');
@@ -33,52 +28,42 @@ require_once($CFG->dirroot . '/local/asistencia/lib.php');
 
 require_login();
 
-global $CFG, $USER;
+global $USER, $PAGE, $DB;
 
-// Creacion de cache
-$cache = cache::make('local_asistencia', 'coursestudentslist');
-
-$courseid = $_GET['courseid'];
-
-$close = local_asistencia_external::close_validation($courseid);
+// Parámetros seguros
+$courseid = required_param('courseid', PARAM_INT);
 $context = context_course::instance($courseid);
-$courseid = required_param('courseid', PARAM_INT); 
 
+// Verificación de capacidades
+require_capability('local/asistencia:view', $context); // acceso general al plugin
+$denybutton = !has_capability('local/asistencia:vergeneral', $context); // bloqueo de botones específicos
+
+// Preparar URL y configuración de página
 $params = ['courseid' => $courseid];
 $currenturl = new moodle_url('/local/asistencia/index.php', $params);
 $dircomplement = explode("/", $currenturl->get_path());
+
 $PAGE->set_url($currenturl);
 $PAGE->set_context($context);
 $PAGE->set_title('Lista Asistencia');
+$PAGE->set_heading(get_course($courseid)->shortname);
+$PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', ['v' => time()]));
 $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
-$PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array('v' => time())));
+$PAGE->requires->js_call_amd('local_asistencia/attendance_views', 'init');
 
-require_capability('local/asistencia:view', $context);
+// Breadcrumb
+local_asistencia_setup_breadcrumb('Menú');
 
-local_asistencia_setup_breadcrumb('Menu');
-$course = get_course($courseid);
-$shortname = $course->shortname;
-$PAGE->set_heading($shortname);
-echo $OUTPUT->header();
-$userid = $USER->id;
-$adminsarray = explode(",", $DB->get_record('config', ['name' => 'siteadmins'])->value);
-$configbutton = in_array($userid, $adminsarray) ? 1 : 0;
-
-$temporalattendance = array_values($DB->get_records('local_asistencia', ['courseid' => $courseid]));
-
-
-//$students = json_decode($studentsstring, true);
+// Contexto para Mustache
 $templatecontext = (object) [
-    //'students' => $students[$attendancepage],
     'courseid' => $courseid,
-    'teacherid' => $userid,
-    'config' => $configbutton,
-    // 'closeattendance' => $closeattendance,
+    'teacherid' => $USER->id,
+    'denybutton' => $denybutton,
     'dirroot' => $dircomplement[1],
     'bannerurl' => new moodle_url('/local/asistencia/pix/banner.jpg')
 ];
 
+// Renderizar
+echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_asistencia/menu', $templatecontext);
-
-$PAGE->requires->js_call_amd('local_asistencia/attendance_views', 'init');
 echo $OUTPUT->footer();

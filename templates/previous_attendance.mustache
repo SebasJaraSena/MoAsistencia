@@ -25,12 +25,19 @@ Example context (json):
 }
 }}
 
-
-<div class="mx-1">
-    <button type="button" class="btn btn-primary"
-        onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'"><i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>Regresar al
-        menu</button>
+<div class="d-flex justify-content-start ml-4 my-2">
+    <div class="position-relative d-inline-block"
+        onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'"
+        style="cursor: pointer;">
+        <button type="button" class="btn btn-custom btn-small">
+            Volver al Menu
+        </button>
+        <span class="icon-circle-overlap">
+            <i class="fa-solid fa-arrow-left"></i>
+        </span>
+    </div>
 </div>
+
 <div class="container ">
     <div class="row attendance-row">
         <div class="col-md-auto">
@@ -42,7 +49,7 @@ Example context (json):
                     <option value="3" {{#3week}}selected{{/3week}}>3 Semanas</option>
                     <option value="4" {{#4week}}selected{{/4week}}>4 Semanas</option>
                 </select>
-                <button type="submit" class="btn btn-primary">Retroceder</button>
+                <button type="submit" id="color_btn" class="btn btn-primary ">Retroceder</button>
             </form>
         </div>
     </div>
@@ -53,6 +60,9 @@ Example context (json):
 <br>
 <form action="./previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}&weeks={{weeks}}"
     method="POST" id="course_{{courseid}}">
+     <input type="hidden" name="courseid" value="{{courseid}}">
+    <input type="hidden" name="teacherid" value="{{teacherid}}">
+    <input type="hidden" name="numweeks" value="{{weeks}}">
     <div class="container" style="display: flex; align-items: center; gap: 10px;">
         <h1 style="margin: 0;">Buscar:</h1>
         <input type="text" id="searchInput" class="form-control"
@@ -112,31 +122,33 @@ Example context (json):
                         {{^status}}ACTIVO{{/status}}
                     </td>
                     {{#week}}
-                  <td class="select-container">
-                    <input type="hidden" name="date[{{id}}][]" value="{{fulldate}}">
+                    <td class="select-container">
+                        <input type="hidden" name="date[{{id}}][]" value="{{fulldate}}">
 
-                    <select name="attendance[{{id}}][{{fulldate}}]" class="custom-select form-select"
-                        {{#locked}}disabled{{/locked}}>
-                        <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
-                        <option value="1" {{#selection.op1}}selected{{/selection.op1}} title="Asistió">A</option>
-                        <option value="0" {{#selection.op0}}selected{{/selection.op0}} title="No asistió">I</option>
-                        <option value="2" {{#selection.op2}}selected{{/selection.op2}} title="Llegó tarde">R</option>
-                        <option value="3" {{#selection.op3}}selected{{/selection.op3}} title="Excusa médica">EM</option>
-                    </select>
+                        <select name="attendance[{{id}}][{{fulldate}}]" class="custom-select form-select"
+                            {{#locked}}disabled{{/locked}}>
+                            <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
+                            <option value="1" {{#selection.op1}}selected{{/selection.op1}} title="Asistió">A</option>
+                            <option value="0" {{#selection.op0}}selected{{/selection.op0}} title="No asistió">I</option>
+                            <option value="2" {{#selection.op2}}selected{{/selection.op2}} title="Llegó tarde">R
+                            </option>
+                            <option value="3" {{#selection.op3}}selected{{/selection.op3}} title="Excusa médica">EM
+                            </option>
+                        </select>
 
-                    <div class="input-container">
-                        <input type="number" name="extrainfoNum[{{id}}][{{fulldate}}]"
-                            class="form-control extra-input" placeholder="Horas" min="1" max="10"
-                            value="{{missedhours}}" {{#locked}}readonly{{/locked}}>
-                        <textarea name="extrainfo[{{id}}][{{fulldate}}]" class="form-control extra-input"
-                            placeholder="Observaciones" style="width: 100%; height: 40px;"
-                            {{#locked}}readonly{{/locked}}>{{observations}}</textarea>
-                    </div>
+                        <div class="input-container">
+                            <input type="number" name="extrainfoNum[{{id}}][{{fulldate}}]"
+                                class="form-control extra-input" placeholder="Horas" min="1" max="10"
+                                value="{{missedhours}}" {{#locked}}readonly{{/locked}}>
+                            <textarea name="extrainfo[{{id}}][{{fulldate}}]" class="form-control extra-input"
+                                placeholder="Observaciones" style="width: 100%; height: 40px;"
+                                {{#locked}}readonly{{/locked}}>{{observations}}</textarea>
+                        </div>
 
-                    {{#status}}
-                    <p style="font-size: 0.8em; color: #888; margin-top: 4px;">SUSPENDIDO</p>
-                    {{/status}}
-                </td>
+                        {{#status}}
+                        <p style="font-size: 0.8em; color: #888; margin-top: 4px;">SUSPENDIDO</p>
+                        {{/status}}
+                    </td>
 
                     {{/week}}
 
@@ -146,13 +158,26 @@ Example context (json):
                 {{/students}}
         </table>
         <tbody>
-            {{^close}}
-            <input type="hidden" name="close" value="1">
-            <button type="button" id="saveButton" class="btn btn-primary my-button" onclick="location.href='#modal1'"
-                {{#close}}disabled{{/close}}><i class="fa-solid fa-floppy-disk"></i>
-Guardar</button>
-            {{/close}}
+
     </div>
+    {{^close}}
+    <input type="hidden" name="close" value="1">
+
+    <div class="d-flex flex-column align-items-center ml-4 my-3">
+        <div id="saveButtonWrapper" class="position-relative d-inline-block">
+            <button type="button" id="saveButton" class="btn btn-custom btn-small">Guardar</button>
+            <span class="icon-circle-overlap">
+                <i class="fa-solid fa-floppy-disk"></i>
+            </span>
+        </div>
+        <div id="saveWarning" style="color: red; margin-top: 8px; display: none;">
+            DEBES INGRESAR EL TIEMPO Y LAS OBSERVACIONES
+        </div>
+    </div>
+
+
+
+    {{/close}}
     <div>
         <br>
         <div class="container">
@@ -173,21 +198,28 @@ Guardar</button>
         </div>
     </div>
 
-    <div id="modal1" class="new-modal">
+    <div class="modal fade" id="modal1" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
 
-        <div class="card floating-card ">
-            <div class="card-body">
-                <h2 class="card-title">¿Estás seguro de que deseas cerrar la asistencia?</h2>
-                <h3 class="card-subtitle">Al cerrar la asistencia no se podrá modificar los valores diligenciados.</h3>
-                <br>
-                <div class="d-flex justify-content-between">
-
-                    <button id="confirmAtt" type="button" class="btn btn-primary">Confirmar</button>
-                    <button id="cancelAtt" type="button" class="btn btn-secondary"
-                        onclick="location.href=''">Cancelar</button>
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel">¿Estás seguro de que deseas cerrar la asistencia?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
+
+                <div class="modal-body">
+                    Al cerrar la asistencia no se podrá modificar los valores diligenciados.
+                </div>
+
+                <div class="modal-footer">
+                    <button id="confirmAtt" type="button" class="btn  btn-primary">Confirmar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+
             </div>
         </div>
-
     </div>
+
 </form>

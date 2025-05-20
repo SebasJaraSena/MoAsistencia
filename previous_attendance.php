@@ -33,17 +33,28 @@ require_once($CFG->dirroot . '/local/asistencia/lib.php');
 
 require_login();
 
-global $CFG, $USER;
+
+
+global $CFG, $USER, $SESSION;
 
 // Creacion de cache
 $cache = cache::make('local_asistencia', 'coursestudentslist');
 $userid = $USER->id;
-$courseid = $_GET['courseid'];
+/* $courseid = $_GET['courseid']; */
+$courseid = required_param('courseid', PARAM_INT);
 $attendancepage = $_GET['page'] ?? 1;
 // $limit = $_GET['limit']??1;
 $date = new DateTime(date('Y-m-d'));
-$weeks = isset($_GET['weeks']) && ($_GET['weeks'] <= 4 && $_GET['weeks'] >= 1) ? $_GET['weeks'] : 1;
-$weeks = isset($_POST['numweeks']) ? $_POST['numweeks'] : $weeks;
+global $SESSION;
+
+if (isset($_POST['numweeks']) && in_array($_POST['numweeks'], ['1', '2', '3', '4'])) {
+    $SESSION->selectedweeks = (int) $_POST['numweeks'];
+} elseif (isset($_GET['weeks']) && in_array($_GET['weeks'], ['1', '2', '3', '4'])) {
+    $SESSION->selectedweeks = (int) $_GET['weeks'];
+}
+
+$weeks = $SESSION->selectedweeks ?? 1;
+
 $startweek = clone $date;
 $endweek = clone $date;
 $initial = $date->format('l') == 'Monday' ? $startweek->modify("-$weeks week")->format("Y-m-d") : $startweek->modify("-$weeks week")->modify("last monday")->format("Y-m-d");
@@ -67,7 +78,8 @@ $PAGE->set_title("Lista Asistencia Semana $weeks");
 $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
 $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array('v' => time())));
 
-require_capability('local/asistencia:view', $context);
+require_capability('local/asistencia:viewanterior', $context);
+
 
 $a = 0;
 
@@ -307,12 +319,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['attendance'], $_POST[
 
     $DB->delete_records('local_asistencia', ['courseid' => $courseid]);
 
-    //redirect($CFG->wwwroot . "/local/asistencia/previous_attendance.php?courseid=$courseid&page=1&range=0");
-    $url = new moodle_url('/local/asistencia/previous_attendance.php', [
-        'courseid' => $courseid,
-        'page' => 1,
-        'range' => 0
-    ]);
+   $page = $_POST['page'] ?? ($_GET['page'] ?? 1);
+$range = $_POST['range'] ?? ($_GET['range'] ?? 0);
+
+// Ya no pasamos weeks en la URL: lo maneja la sesión
+$url = new moodle_url('/local/asistencia/previous_attendance.php', [
+    'courseid' => $courseid,
+    'page' => $page,
+    'range' => $range
+]);
+
     echo $OUTPUT->header();
     echo $OUTPUT->notification("Guardando asistencia, redireccionando...", 'notifysuccess');
     echo "<script>setTimeout(function(){ window.location.href = '{$url}'; }, 50);</script>";
