@@ -50,6 +50,11 @@ $result = local_asistencia_external::fetch_attendance_report($attendancehistory,
 $contextid = context_course::instance($courseid)->id;
 $studentdata = fetch_students::fetch_students($contextid, $courseid, 5, 0, 1000); // Role ID 5 = estudiantes
 $students = $studentdata['students_data'];
+// Filtrar resultado para dejar solo aprendices válidos
+$usernames = array_column($students, 'username');
+$result = array_filter($result, function ($row) use ($usernames) {
+    return in_array($row['username'], $usernames);
+});
 
 // Enriquecer los datos con el estado (status)
 foreach ($result as &$row) {
@@ -60,6 +65,7 @@ foreach ($result as &$row) {
         }
     }
 }
+unset($row); // buena práctica para evitar problemas con el foreach por referencia
 
 local_asistencia_external::attendance_report($result, $initialdate, $finaldate, $shortname);
 

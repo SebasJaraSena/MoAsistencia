@@ -96,11 +96,15 @@ Example context (json):
 
         <!-- Botón de mostrar consolidado a la derecha -->
         <div class="col-md-auto my-2">
-            <button type="button" class="btn btn-primary"id="color_btn"
-                onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page={{page}}&info=h&initial={{initial}}&final={{final}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}&range={{#range}}0{{/range}}{{^range}}1{{/range}}'">
-                <i class="fa-solid fa-table" style="margin-right: 8px;"></i>Mostrar {{^range}}consolidado de{{/range}}{{#range}}mi{{/range}} asistencia {{^range}}por todos los
-                instructores{{/range}}
-            </button>
+    <button type="button" class="btn btn-primary" id="color_btn"
+    onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page=1&info=h&initial={{initial_value}}&final={{final_value}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}&range={{#isrange1}}0{{/isrange1}}{{^isrange1}}1{{/isrange1}}&limit={{limit}}'">
+    <i class="fa-solid fa-table" style="margin-right: 8px;"></i>
+    {{^isrange1}}Mostrar consolidado por todos los instructores{{/isrange1}}
+    {{#isrange1}}Mostrar mi asistencia{{/isrange1}}
+</button>
+
+
+
              <button type="button" class="btn btn-primary"id="color_btn"
                 onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&info=h&page=1&initial={{initial}}&final={{final}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}{{#range}}&range=1{{/range}}{{^range}}&range=0{{/range}}{{#limit}}&limit=0{{/limit}}{{^limit}}&limit=1&page=1{{/limit}}'">
                 {{#limit}}  <i class="fa-solid fa-list" style="margin-right: 8px;"></i>Ver listado completo{{/limit}}{{^limit}}<i class="fa-solid fa-file-alt"style="margin-right: 8px;"></i>Ver paginado{{/limit}}

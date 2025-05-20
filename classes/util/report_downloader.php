@@ -31,146 +31,181 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 class report_donwloader
 {
     public static function attendance_report($result, $initialdate, $finaldate, $shortname)
-{
-    global $DB, $USER;
+    {
+        global $DB, $USER;
 
-    require_once($GLOBALS['CFG']->libdir . '/excellib.class.php');
-    $filename = 'reporte_asistencia_' . $shortname . '_' . $initialdate . '_' . $finaldate . '.xlsx';
+        require_once($GLOBALS['CFG']->libdir . '/excellib.class.php');
+        $filename = 'reporte_asistencia_' . $shortname . '_' . $initialdate . '_' . $finaldate . '.xlsx';
 
-    // Filtrar estudiantes con asistencia
-    $attendanceFound = array_filter($result, function($row) {
-        return isset($row['day0']);
-    });
+        // Filtrar estudiantes con asistencia
+        $attendanceFound = array_filter($result, function ($row) {
+            return isset($row['day0']);
+        });
 
-    if (!empty($attendanceFound)) {
+        if (!empty($attendanceFound)) {
 
-        // 1. Recoger todas las fechas únicas
-        $dateSet = [];
-        foreach ($result as $row) {
-            foreach ($row as $key => $value) {
-                if (preg_match('/^day(\d+)$/', $key, $matches)) {
-                    $dateSet[$row["day{$matches[1]}"]] = true;
-                }
-            }
-        }
-
-        // 2. Ordenar cronológicamente
-        $dates = array_keys($dateSet);
-        sort($dates);
-
-        // 3. Cabeceras
-        $fixedHeaders = ['username', 'firstname', 'lastname', 'email', 'phone1', 'status'];
-        $headers = $fixedHeaders;
-        $headers[array_search('status', $headers)] = 'Estado del Aprendiz';
-        foreach ($dates as $date) {
-            $headers[] = "$date - Asistencia";
-            $headers[] = "$date - Horas";
-            $headers[] = "$date - Instructor";
-        }
-
-        // 4. Reorganizar por estudiante
-        $sortedData = [];
-        foreach ($result as $row) {
-            $studentFixedData = [];
-            foreach ($fixedHeaders as $field) {
-                if ($field === 'status') {
-                    $statusValue = isset($row[$field]) ? (int)$row[$field] : 0;
-                    $studentFixedData[] = $statusValue === 1 ? 'SUSPENDIDO' : 'ACTIVO';
-                } else {
-                    $studentFixedData[] = $row[$field] ?? '';
+            // 1. Recoger todas las fechas únicas
+            $dateSet = [];
+            foreach ($result as $row) {
+                foreach ($row as $key => $value) {
+                    if (preg_match('/^day(\d+)$/', $key, $matches)) {
+                        $dateSet[$row["day{$matches[1]}"]] = true;
+                    }
                 }
             }
 
-            $dayState = [];
-            $dayTime = [];
-            $dayTeacher = [];
-            $i = 0;
-            while (isset($row["day$i"])) {
-                $date = $row["day$i"];
-                $state = $row["state$i"] ?? '';
-                $time = $row["time$i"] ?? '';
-                $teacher = $row["teacher$i"] ?? '';
+            // 2. Ordenar cronológicamente
+            $dates = array_keys($dateSet);
+            sort($dates);
 
-                $dayState[$date][] = $state;
-                $dayTime[$date][] = $time;
-                $dayTeacher[$date][] = $teacher;
-                $i++;
-            }
+            // 3. Cabeceras 
 
-            $finalRow = $studentFixedData;
+            $fixedHeaders = ['username', 'firstname', 'lastname', 'email', 'phone1', 'status'];
+            $headers = array_map(function ($header) {
+                switch ($header) {
+                    case 'username':
+                        return 'Número de documento';
+                    case 'firstname':
+                        return 'Nombres';
+                    case 'lastname':
+                        return 'Apellidos';
+                    case 'email':
+                        return 'Correo electrónico';
+                    case 'phone1':
+                        return 'Tipo de identificación';
+                    case 'status':
+                        return 'Estado del Aprendiz';
+                    default:
+                        return $header;
+                }
+            }, $fixedHeaders);
+
+            // Agregar cabeceras dinámicas por fecha
             foreach ($dates as $date) {
-                $finalRow[] = isset($dayState[$date])
-                    ? implode("\n", array_map(function ($v, $i) {
-                        return ($i + 1) . '. ' . $v;
-                    }, $dayState[$date], array_keys($dayState[$date])))
-                    : '';
-
-                $finalRow[] = isset($dayTime[$date])
-                    ? implode("\n", array_map(function ($v, $i) {
-                        return ($i + 1) . '. (' . $v . ' horas)';
-                    }, $dayTime[$date], array_keys($dayTime[$date])))
-                    : '';
-
-                $finalRow[] = isset($dayTeacher[$date])
-                    ? implode("\n", array_map(function ($v, $i) {
-                        return ($i + 1) . '. ' . $v;
-                    }, $dayTeacher[$date], array_keys($dayTeacher[$date])))
-                    : '';
+                $headers[] = "$date - Asistencia";
+                $headers[] = "$date - Horas";
+                $headers[] = "$date - Observaciones";
+                $headers[] = "$date - Instructor";
             }
 
-            $sortedData[] = $finalRow;
-        }
 
-        // 5. Crear y guardar Excel
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Reporte');
+            // 4. Reorganizar por estudiante
+            $sortedData = [];
+            foreach ($result as $row) {
+                $studentFixedData = [];
+                foreach ($fixedHeaders as $field) {
+                    if ($field === 'status') {
+                        $statusValue = isset($row[$field]) ? (int) $row[$field] : 0;
+                        $studentFixedData[] = $statusValue === 1 ? 'SUSPENDIDO' : 'ACTIVO';
+                    } else {
+                        $studentFixedData[] = $row[$field] ?? '';
+                    }
+                }
 
-        $instructor = fullname($USER);
+                $dayState = [];
+                $dayTime = [];
+                $dayTeacher = [];
+                $dayObservation = [];
+                $i = 0;
+                while (isset($row["day$i"])) {
+                    $date = $row["day$i"];
+                    $state = $row["state$i"] ?? '';
+                    $time = $row["time$i"] ?? '';
+                    $observation = $row["observation$i"] ?? '';
+                    $teacher = $row["teacher$i"] ?? '';
 
-        $sheet->setCellValue('A1', "Curso: $shortname");
-        $sheet->setCellValue('B1', "Fecha: $initialdate a $finaldate");
-        $sheet->setCellValue('C1', "Usuario : $instructor");
+                    $dayState[$date][] = $state;
+                    $dayTime[$date][] = $time;
+                    // Solo guarda la observación si hay contenido real
+                    if (trim($observation) !== '') {
+                        $dayObservation[$date][] = $observation;
+                    }
+                    $dayTeacher[$date][] = $teacher;
+                    $i++;
+                }
 
-        $sheet->fromArray($headers, NULL, 'A2');
-        $sheet->fromArray($sortedData, NULL, 'A3');
+                $finalRow = $studentFixedData;
+                foreach ($dates as $date) {
+                    $finalRow[] = isset($dayState[$date])
+                        ? implode("\n", array_map(function ($v, $i) {
+                            return ($i + 1) . '. ' . $v;
+                        }, $dayState[$date], array_keys($dayState[$date])))
+                        : '';
 
-        $tmp = sys_get_temp_dir() . "/$filename";
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $writer->save($tmp);
+                    $finalRow[] = isset($dayTime[$date])
+                        ? implode("\n", array_map(function ($v, $i) {
+                            return ($i + 1) . '. (' . $v . ' horas)';
+                        }, $dayTime[$date], array_keys($dayTime[$date])))
+                        : '';
 
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header("Content-Disposition: attachment; filename=\"$filename\"");
-        header('Content-Length: ' . filesize($tmp));
-        readfile($tmp);
-        unlink($tmp);
+                    $finalRow[] = isset($dayObservation[$date])
+                        ? implode("\n", array_map(function ($v, $i) {
+                            return ($i + 1) . '. ' . $v;
+                        }, $dayObservation[$date], array_keys($dayObservation[$date])))
+                        : '';
 
-        // Log
-        try {
-            $toinsert = new stdClass;
-            $toinsert->code = "40";
-            $toinsert->message = "Reporte generado con nombre \"$filename\".";
-            $toinsert->date = date("Y-m-d H:i:s", time());
-            $toinsert->userid = $USER->id;
-            $DB->insert_record("local_asistencia_logs", $toinsert);
-        } catch (\Throwable $th) {
-            // Silenciar errores
-        }
+                    $finalRow[] = isset($dayTeacher[$date])
+                        ? implode("\n", array_map(function ($v, $i) {
+                            return ($i + 1) . '. ' . $v;
+                        }, $dayTeacher[$date], array_keys($dayTeacher[$date])))
+                        : '';
+                }
 
-    } else {
-        \core\notification::add("No hay información de asistencia en el rango de fechas.", \core\output\notification::NOTIFY_ERROR);
-        try {
-            $toinsert = new stdClass;
-            $toinsert->code = "43";
-            $toinsert->message = "El reporte \"$filename\" no pudo ser generado. No se encontró información en la tabla.";
-            $toinsert->date = date("Y-m-d H:i:s", time());
-            $toinsert->userid = $USER->id;
-            $DB->insert_record("local_asistencia_logs", $toinsert);
-        } catch (\Throwable $th) {
-            // Silenciar errores
+                $sortedData[] = $finalRow;
+            }
+
+            // 5. Crear y guardar Excel
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Reporte');
+
+            $instructor = fullname($USER);
+
+            $sheet->setCellValue('A1', "Curso: $shortname");
+            $sheet->setCellValue('B1', "Fecha: $initialdate a $finaldate");
+            $sheet->setCellValue('C1', "Usuario : $instructor");
+
+            $sheet->fromArray($headers, NULL, 'A2');
+            $lastColumn = $sheet->getHighestColumn();
+            $sheet->getStyle("A2:{$lastColumn}2")->getFont()->setBold(true);
+            $sheet->fromArray($sortedData, NULL, 'A3');
+
+            $tmp = sys_get_temp_dir() . "/$filename";
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save($tmp);
+
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header("Content-Disposition: attachment; filename=\"$filename\"");
+            header('Content-Length: ' . filesize($tmp));
+            readfile($tmp);
+            unlink($tmp);
+
+            // Log
+            try {
+                $toinsert = new stdClass;
+                $toinsert->code = "40";
+                $toinsert->message = "Reporte generado con nombre \"$filename\".";
+                $toinsert->date = date("Y-m-d H:i:s", time());
+                $toinsert->userid = $USER->id;
+                $DB->insert_record("local_asistencia_logs", $toinsert);
+            } catch (\Throwable $th) {
+                // Silenciar errores
+            }
+
+        } else {
+            \core\notification::add("No hay información de asistencia en el rango de fechas.", \core\output\notification::NOTIFY_ERROR);
+            try {
+                $toinsert = new stdClass;
+                $toinsert->code = "43";
+                $toinsert->message = "El reporte \"$filename\" no pudo ser generado. No se encontró información en la tabla.";
+                $toinsert->date = date("Y-m-d H:i:s", time());
+                $toinsert->userid = $USER->id;
+                $DB->insert_record("local_asistencia_logs", $toinsert);
+            } catch (\Throwable $th) {
+                // Silenciar errores
+            }
         }
     }
-}
 
- 
+
 }

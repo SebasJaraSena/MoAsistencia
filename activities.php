@@ -47,7 +47,7 @@
  $context = context_system::instance();
  $PAGE->set_url($currenturl);
  $PAGE->set_context($context);
- $PAGE->set_title('Actividades');
+ $PAGE->set_title('Logs de descargas');
  $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
  $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', ['v' => time()]));
  
@@ -58,7 +58,7 @@ try {
     $activities = local_asistencia_external::fetch_activities_report();
     $form = new edit();
     $numpages = (int) ceil(count($activities) / 10); // Define la cantidad de páginas que va a tener la visual
-    local_asistencia_setup_breadcrumb('Listar actividades');
+    local_asistencia_setup_breadcrumb('Logs de descargas ');
     $course = get_course($courseid);
     $shortname = $course->shortname;
     $PAGE->set_heading($shortname);

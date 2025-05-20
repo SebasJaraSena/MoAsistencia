@@ -29,41 +29,57 @@ require_once("$CFG->libdir/externallib.php");
 class fetch_activities
 {
 
-    public static function fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)
-    {
+   public static function fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)
+{
+    global $DB;
 
-        global $DB;
+    $studentsinfo = [];
+    $arrayopts = ['-1' => "SUSPENDIDO", 0 => "INASISTENCIA", 1 => "ASISTIO", 2 => "LLEGA_TARDE", 3 => "EXCUSA_MEDICA", '-8' => "NA"];
 
-        $studentsinfo = [];
-        $arrayopts = ['-1' => "SUSPENDIDO", 0 => "INASISTENCIA", 1 => "ASISTIO", 2 => "LLEGA_TARDE", 3 => "EXCUSA_MEDICA", '-8' => "NA",]; // Se establece el significado de los valores guardados en la asistencia
-        foreach ($attendancehistory as $index => $ah) { // Ciclo para iterar sobre los datos de la asistencia
-            $id = $ah['student_id'];
-            $studentsinfo[$index] = json_decode(json_encode($DB->get_record('user', ['id' => $id], 'username, lastname, firstname, email, phone1')), true);
-            $attendancearray = json_decode($ah['full_attendance'], true);
+    foreach ($attendancehistory as $index => $ah) {
+        $id = $ah['student_id'];
+        $studentsinfo[$index] = json_decode(json_encode($DB->get_record('user', ['id' => $id], 'username, lastname, firstname, email, phone1')), true);
 
-            // Se filtra por rango de fechas o por el rango de fecha y por el id del instructor según se cumpla la condición
-            $filtereddates = $cumulous == 1 ? array_filter($attendancearray, function ($item) use ($initialdate, $finaldate) { // Se filtra solo por rango de fechas
+        $attendancearray = json_decode($ah['full_attendance'], true);
+
+        $filtereddates = $cumulous == 1
+            ? array_filter($attendancearray, function ($item) use ($initialdate, $finaldate) {
                 return ($item['DATE'] >= $initialdate) && ($item['DATE'] <= $finaldate);
-            }) : array_filter($attendancearray, function ($item) use ($userid, $initialdate, $finaldate) { // Se filtra por rango de fechas y por id de instructor
+            })
+            : array_filter($attendancearray, function ($item) use ($userid, $initialdate, $finaldate) {
                 return ($item['TEACHER_ID'] == $userid) && ($item['DATE'] >= $initialdate) && ($item['DATE'] <= $finaldate);
             });
-            $i = 0;
-            foreach ($filtereddates as $attendanceinfo) { // Ciclo para formatear la información de la asistencia para que sea legible
-                $studentsinfo[$index]["day$i"] = $attendanceinfo['DATE'];
-                $studentsinfo[$index]["state$i"] = $arrayopts[$attendanceinfo['ATTENDANCE']];
-                $studentsinfo[$index]["time$i"] = $attendanceinfo['AMOUNTHOURS'];
-                $teacherinfo = json_decode(json_encode($DB->get_record('user', ['id' => $attendanceinfo['TEACHER_ID']], 'username, lastname, firstname, email, phone1')), true);
-                $studentsinfo[$index]["teacher$i"] = $teacherinfo['phone1'] . '-' . $teacherinfo['username'] . '-' . $teacherinfo['lastname'] . '-' . $teacherinfo['firstname'] . '-' . $teacherinfo['email'];
-                $i++;
+
+        $observaciones = [];
+        $i = 0;
+        foreach ($filtereddates as $attendanceinfo) {
+            $studentsinfo[$index]["day$i"] = $attendanceinfo['DATE'];
+            $studentsinfo[$index]["state$i"] = $arrayopts[$attendanceinfo['ATTENDANCE']];
+            $studentsinfo[$index]["time$i"] = $attendanceinfo['AMOUNTHOURS'];
+            $studentsinfo[$index]["observation$i"] = $attendanceinfo['OBERVATIONS'] ?? '';
+            $teacherinfo = json_decode(json_encode($DB->get_record('user', ['id' => $attendanceinfo['TEACHER_ID']], 'username, lastname, firstname, email, phone1')), true);
+            $studentsinfo[$index]["teacher$i"] = $teacherinfo['phone1'] . '-' . $teacherinfo['username'] . '-' . $teacherinfo['lastname'] . '-' . $teacherinfo['firstname'] . '-' . $teacherinfo['email'];
+
+            // Extraer observación si existe
+            if (!empty(trim($attendanceinfo['OBERVATIONS'] ?? ''))) {
+                $observaciones[] = trim($attendanceinfo['OBERVATIONS']);
             }
+
+            $i++;
         }
-        // Function to sort the data by "lastname"
-        usort($studentsinfo, function ($a, $b) {
-            return strcmp($a['lastname'], $b['lastname']);
-        });
-        // Now $studentsinfo is sorted by lastname
-        return $studentsinfo;
+
+        // Agregar campo 'observations' al array del estudiante
+        $studentsinfo[$index]['observations'] = implode(' | ', $observaciones);
     }
+
+    // Ordenar por apellido
+    usort($studentsinfo, function ($a, $b) {
+        return strcmp($a['lastname'], $b['lastname']);
+    });
+
+    return $studentsinfo;
+}
+
 
     public static function fetch_attendance_report_detailed($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)
     {

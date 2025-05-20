@@ -367,6 +367,7 @@ $templatecontext = (object) [
     'currentpage' => $currentpage,
     'initial_value' => $initialdate->format('Y-m-d'),
     'final_value' => $finaldate->format('Y-m-d'),
+    'isrange1' => (isset($_GET['range']) && $_GET['range'] === '1'),
     'day' => $day,
     'week' => $week,
     'range_dates' => $range_dates,
