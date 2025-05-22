@@ -30,7 +30,7 @@ Example context (json):
         onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'"
         style="cursor: pointer;">
         <button type="button" class="btn btn-custom btn-small">
-            Volver al Menu
+            Menú
         </button>
         <span class="icon-circle-overlap">
             <i class="fa-solid fa-arrow-left"></i>
@@ -53,23 +53,25 @@ Example context (json):
             </form>
         </div>
     </div>
-
-
-
 </div>
+
 <br>
 <form action="./previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}&weeks={{weeks}}"
     method="POST" id="course_{{courseid}}">
-     <input type="hidden" name="courseid" value="{{courseid}}">
+
+    <input type="hidden" name="courseid" value="{{courseid}}">
     <input type="hidden" name="teacherid" value="{{teacherid}}">
     <input type="hidden" name="numweeks" value="{{weeks}}">
-    <div class="container" style="display: flex; align-items: center; gap: 10px;">
-        <h1 style="margin: 0;">Buscar:</h1>
-        <input type="text" id="searchInput" class="form-control"
-            placeholder="Buscar por documento, apellidos, nombres o correo">
-    </div>
-    <br>
-    <div class="container fortable" style="width:auto; overflow-x: auto">
+
+    <div class="container">
+        <div class="d-flex align-items-center mb-3" id=table_search>
+            <label for="searchInput" class="mb-0"><strong>Buscar:</strong></label>
+            <input type="text" id="searchInput" class="form-control"
+                placeholder="Buscar por documento, apellidos, nombres o correo">
+        </div>
+
+        <div class="fortable" style="width:auto; overflow-x: auto">
+
         <input type="hidden" id="courseid" name="courseid" value="{{courseid}}">
         <input type="hidden" id="teacher_{{id}}" name="teacherid" value="{{teacherid}}">
         <table class="table table-hover table-container" id="attendance-table">

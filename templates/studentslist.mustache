@@ -27,32 +27,37 @@ Example context (json):
 
 
 <div class="d-flex justify-content-start ml-4 my-2">
-  <div class="position-relative d-inline-block" onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'" style="cursor: pointer;">
-    <button type="button" class="btn btn-custom btn-small">
-      Volver al Menu
-    </button>
-    <span class="icon-circle-overlap">
-      <i class="fa-solid fa-arrow-left"></i>
-    </span>
-  </div>
+    <div class="position-relative d-inline-block"
+        onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'"
+        style="cursor: pointer;">
+        <button type="button" class="btn btn-custom btn-small">
+            Menú
+        </button>
+        <span class="icon-circle-overlap">
+            <i class="fa-solid fa-arrow-left"></i>
+        </span>
+    </div>
 </div>
-<div class="container justify-content-end">
+<div class="container ">
 
-    <br>
+     <br>
+
     <form action="./attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}" method="POST"
         id="course_{{courseid}}">
         {{#weekheader}}
         <input type="hidden" name="date[]" value="{{fulldate}}">
         {{/weekheader}}
-        <div class="container" style="display: flex; align-items: center; gap: 10px;">
-            <h1 style="margin: 0;">Buscar:</h1>
-            <input type="text" id="searchInput" class="form-control"
-                placeholder="Buscar por documento, apellidos, nombres o correo">
-        </div>
+        <div class="container">
 
-        <br>
+    <div class="d-flex justify-content-start align-items-center mb-3" id=table_search>
+        <label for="searchInput" class="mb-0"><strong>Buscar:</strong></label>
+        <input type="text" id="searchInput" class="form-control"
+            placeholder="Buscar por documento, apellidos, nombres o correo">
+    </div>
 
-        <div class="container fortable" style="width:100%; overflow-x: auto">
+    <div class="fortable" id="table-attendance">
+
+        
 
             <input type="hidden" id="courseid" name="courseid" value="{{courseid}}">
             <input type="hidden" id="teacher_{{id}}" name="teacherid" value="{{teacherid}}">
@@ -122,10 +127,14 @@ Example context (json):
                             {{^closed}}
                             <select name="attendance[{{id}}][{{fulldate}}]" class="custom-select form-select">
                                 <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
-                                <option value="1" {{#selection.op1}}selected{{/selection.op1}} title="Asistió">A</option>
-                                <option value="0" {{#selection.op0}}selected{{/selection.op0}} title="No asistió">I</option>
-                                <option value="2" {{#selection.op2}}selected{{/selection.op2}} title="Llego tarde">R</option>
-                                <option value="3" {{#selection.op3}}selected{{/selection.op3}} title="Excusa medica">EM</option>
+                                <option value="1" {{#selection.op1}}selected{{/selection.op1}} title="Asistió">A
+                                </option>
+                                <option value="0" {{#selection.op0}}selected{{/selection.op0}} title="No asistió">I
+                                </option>
+                                <option value="2" {{#selection.op2}}selected{{/selection.op2}} title="Llego tarde">R
+                                </option>
+                                <option value="3" {{#selection.op3}}selected{{/selection.op3}} title="Excusa medica">EM
+                                </option>
                             </select>
                             <div class="input-container">
                                 <input type="number" name="extrainfoNum[{{id}}][{{fulldate}}]"
@@ -149,25 +158,25 @@ Example context (json):
                 </tbody>
             </table>
 
-            
+
         </div>
         {{^close}}
-<div class="d-flex flex-column align-items-center ml-4 my-3">
-  <div class="position-relative d-inline-block" style="cursor: pointer;">
-    <button type="submit" id="saveButton" class="btn btn-custom btn-small">
-      Guardar
-    </button>
-    <span class="icon-circle-overlap">
-      <i class="fa-solid fa-floppy-disk"></i>
-    </span>
-  </div>
-  <div id="saveWarning" style="color: red; margin-top: 8px; display: none;">
-   Debes ingresar un tiempo, con un límite máximo de 10 horas.
-  </div>
-</div>
+        <div class="d-flex flex-column align-items-center ml-4 my-3">
+            <div class="position-relative d-inline-block" style="cursor: pointer;">
+                <button type="submit" id="saveButton" class="btn btn-custom btn-small">
+                    Guardar
+                </button>
+                <span class="icon-circle-overlap">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                </span>
+            </div>
+            <div id="saveWarning" style="color: red; margin-top: 8px; display: none;">
+                Debes ingresar un tiempo, con un límite máximo de 10 horas.
+            </div>
+        </div>
 
-            {{/close}}
-        
+        {{/close}}
+
 
         {{^close}}
         <div class="container">
@@ -193,3 +202,4 @@ Example context (json):
             </div>
         </div>
     </form>
+</div>

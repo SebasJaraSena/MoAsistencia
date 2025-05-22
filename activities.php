@@ -22,42 +22,73 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- use block_rss_client\output\item;
- use core\plugininfo\local;
- use core_calendar\local\event\forms\create;
- 
- require_once(__DIR__ . '/../../config.php');
- require_once(__DIR__ . '/classes/form/edit.php');
- require_once(__DIR__ . '/externallib.php');
- require_once($CFG->dirroot . '/local/asistencia/lib.php');
- 
- require_login();
- 
- $courseid = required_param('courseid', PARAM_INT);
- $pageurl = optional_param('page', 1, PARAM_INT);
- 
- $params = [
-     'courseid' => $courseid,
-     'page' => $pageurl
- ];
- 
- $currenturl = new moodle_url('/local/asistencia/activities.php', $params);
- $dircomplement = explode("/", $currenturl->get_path());
- 
- $context = context_system::instance();
- $PAGE->set_url($currenturl);
- $PAGE->set_context($context);
- $PAGE->set_title('Logs de descargas');
- $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
- $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', ['v' => time()]));
- 
- $dbname = $DB->get_record('local_asistencia_config', ['name' => 'dbname'])->value;
- 
+use block_rss_client\output\item;
+use core\plugininfo\local;
+use core_calendar\local\event\forms\create;
+
+require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/classes/form/edit.php');
+require_once(__DIR__ . '/externallib.php');
+require_once($CFG->dirroot . '/local/asistencia/lib.php');
+
+require_login();
+
+$courseid = required_param('courseid', PARAM_INT);
+$pageurl = optional_param('page', 1, PARAM_INT);
+$search = optional_param('search', '', PARAM_RAW);
+
+$params = [
+    'courseid' => $courseid,
+    'page' => $pageurl
+];
+
+$currenturl = new moodle_url('/local/asistencia/activities.php', $params);
+$dircomplement = explode("/", $currenturl->get_path());
+
+$context = context_system::instance();
+$PAGE->set_url($currenturl);
+$PAGE->set_context($context);
+$PAGE->set_title('Logs de descargas');
+$PAGE->requires->js_call_amd('local_asistencia/attendance_views', 'init');
+
+$PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', ['v' => time()]));
+
+$dbname = $DB->get_record('local_asistencia_config', ['name' => 'dbname'])->value;
+
 try {
+
     // Se consultan todos los registros en la tabla local_asistencia_logs
     $activities = local_asistencia_external::fetch_activities_report();
+
+    // 🔍 Aplicar filtro si se usa el buscador
+    if (!empty($search)) {
+        // Normalizar búsqueda: minúsculas, sin espacios múltiples
+        $search = strtolower(trim(preg_replace('/\s+/', ' ', $search)));
+
+        $activities = array_filter($activities, function ($activity) use ($search) {
+            // Convertir el objeto completo a un array plano si es necesario
+            if (is_object($activity)) {
+                $activity = (array) $activity;
+            }
+
+            // Convertir todo el array a un solo string
+            $fulltext = implode(' ', array_map(function ($value) {
+                if (is_array($value) || is_object($value)) {
+                    return ''; // Ignorar valores complejos
+                }
+                return $value;
+            }, $activity));
+
+            // Normalizar texto: minúsculas, sin saltos ni múltiples espacios
+            $normalized = strtolower(trim(preg_replace('/\s+/', ' ', $fulltext)));
+
+            return strpos($normalized, $search) !== false;
+        });
+    }
+
     $form = new edit();
-    $numpages = (int) ceil(count($activities) / 10); // Define la cantidad de páginas que va a tener la visual
+    $numpages = (int) ceil(count($activities) / 10);
+
     local_asistencia_setup_breadcrumb('Logs de descargas ');
     $course = get_course($courseid);
     $shortname = $course->shortname;
@@ -95,7 +126,8 @@ try {
         'activities' => array_slice($activities, ($pageurl - 1) * 10, 10),
         'pages' => array_values($pages) ?? [],
         'dirroot' => $dircomplement[1],
-        'courseid' => $courseid
+        'courseid' => $courseid,
+        'search' => $search
     ];
     echo $OUTPUT->render_from_template('local_asistencia/activities', $templatecontext);
 
@@ -121,5 +153,7 @@ try {
     echo $OUTPUT->header();
     echo $OUTPUT->render_from_template('local_asistencia/error', $templatecontext);
     throw new \moodle_exception('dbconnectionerror', 'local_asistencia', '', $e->getMessage());
+
     echo $OUTPUT->footer();
 }
+

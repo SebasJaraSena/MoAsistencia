@@ -12,7 +12,6 @@
   overflow-x: auto;
   width: auto;
   position: relative;
-  
 }
 
 .table-container th,
@@ -21,6 +20,15 @@
   min-width: 120px;
   word-break: break-word;
   border: 1px solid #ddd;
+}
+
+#table-attendance {
+  width: 100%;
+  overflow-x: auto
+}
+
+#table_search {
+  gap: 10px
 }
 
 table {
@@ -91,11 +99,12 @@ select.form-select-h {
   z-index: 1;
 
 }
-#color_btn{
+
+#color_btn {
   background-color: #054869;
 }
 
-#color_btn:hover{
+#color_btn:hover {
   background-color: #1a6083;
 }
 
@@ -127,7 +136,7 @@ select.form-select-h {
   cursor: pointer;
   position: relative;
   padding-left: 25px;
-  
+
 }
 
 .btn-custom:hover {
@@ -154,10 +163,13 @@ select.form-select-h {
 }
 
 .btn-small {
-  width: 150px;  /* más angosto */
-  height: 40px;  /* más bajo */
+  width: 150px;
+  /* más angosto */
+  height: 40px;
+  /* más bajo */
   font-size: 14px;
-  padding-left: 35px; /* importante para que el ícono no se monte */
+  padding-left: 35px;
+  /* importante para que el ícono no se monte */
 }
 
 /*  .icon-circle:hover {
