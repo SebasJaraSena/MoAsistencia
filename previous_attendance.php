@@ -464,9 +464,9 @@ $templatecontext = (object) [
     '3week' => $weeks == 3 ? 1 : 0,
     '4week' => $weeks == 4 ? 1 : 0,
     'asistio' => "Asistió",
-    'inasistencia' => "No asistió",
-    'retraso' => "Llegó tarde",
-    'excusa' => "Excusa médica",
+    'inasistencia' => "Incumplimiento injustificado",
+    'retraso' => "Inasistencia no programada",
+    'excusa' => "Inasistencia programada",
 ];
 
 echo $OUTPUT->render_from_template('local_asistencia/previous_attendance', $templatecontext);

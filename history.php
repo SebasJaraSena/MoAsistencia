@@ -77,7 +77,7 @@ function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $us
             return $item['student_id'] == $studentid;
         }) : [];
 
-        $arrayopts = [0 => "No asistió", 1 => "Asistió", 2 => "Llegada tarde", 3 => "Excusa médica", -8 => "NA"]; // Se define el significado de los valores guardados en la DB externa
+        $arrayopts = [0 => "Incumplimiento injustificado", 1 => "Asistió", 2 => "Inasistencia no programada", 3 => "Inasistencia programada", -8 => "NA"]; // Se define el significado de los valores guardados en la DB externa
         $studentslist[$i]['month'] = $month;
         //iniciar op
         foreach ($studentslist[$i]['month'] as $key => $day) {

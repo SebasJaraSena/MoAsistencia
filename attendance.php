@@ -432,9 +432,9 @@ $templatecontext = (object) [
     'closeattendance' => $closeattendance,
     'dirroot' => $dircomplement[1],
     'asistio' => "Asistió",
-    'inasistencia' => "No asistió",
-    'retraso' => "Llegó tarde",
-    'excusa' => "Excusa médica",
+    'inasistencia' => "Incumplimiento injustificado",
+    'retraso' => "Inasistencia no programada",
+    'excusa' => "Inasistencia programada",
 ];
 
 echo $OUTPUT->render_from_template('local_asistencia/studentslist', $templatecontext);

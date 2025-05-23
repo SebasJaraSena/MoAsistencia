@@ -68,8 +68,8 @@ note bottom of Asistencia
   -1: Suspendido
   0: Inasistencia
   1: Asistió
-  2: Llegada tarde
-  3: Excusa médica
+  2: Inasistencia no programada
+  3: Inasistencia programada
   -8: No aplica
 end note
 
