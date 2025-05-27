@@ -26,7 +26,7 @@ function local_asistencia_setup_breadcrumb($page_title)
     // Obtener todos los parámetros de la URL actual
     $params = $_GET;
 
-    // 🔥 **Filtrar solo los parámetros esenciales**
+    //  **Filtrar solo los parámetros esenciales**
     $allowed_params = ['courseid', 'info']; // Agrega aquí los parámetros que sí deben considerarse
     $filtered_params = array_intersect_key($params, array_flip($allowed_params));
 
@@ -38,7 +38,7 @@ function local_asistencia_setup_breadcrumb($page_title)
         $SESSION->asistencia_breadcrumb = [];
     }
 
-    // ⚡ **Forzar "Asistencia General" como primer elemento si la miga está vacía**
+    //  **Forzar "Asistencia General" como primer elemento si la miga está vacía**
     if (empty($SESSION->asistencia_breadcrumb) && $page_title === "Asistencia General") {
         $SESSION->asistencia_breadcrumb[] = [
             'name' => $page_title,

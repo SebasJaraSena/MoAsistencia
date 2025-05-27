@@ -161,11 +161,9 @@ Example context (json):
 
         </div>
         {{^close}}
-        <div class="d-flex flex-column align-items-center ml-4 my-3">
-            <div class="position-relative d-inline-block" style="cursor: pointer;">
-                <button type="submit" id="saveButton" class="btn btn-custom btn-small">
-                    Guardar
-                </button>
+   <div class="d-flex flex-column align-items-center ml-4 my-3">
+            <div id="saveButtonWrapper" class="position-relative d-inline-block">
+                <button type="button" id="saveButton" class="btn btn-custom btn-small">Guardar</button>
                 <span class="icon-circle-overlap">
                     <i class="fa-solid fa-floppy-disk"></i>
                 </span>
@@ -174,6 +172,7 @@ Example context (json):
                 Debes ingresar un tiempo, con un límite máximo de 10 horas.
             </div>
         </div>
+
 
         {{/close}}
 
@@ -185,19 +184,28 @@ Example context (json):
         </div>
         {{/close}}
 
-        <div id="modal1" class="new-modal">
-            <div class="card floating-card">
-                <div class="card-body">
-                    <h2 class="card-title">¿Estás seguro de que deseas cerrar la asistencia?</h2>
-                    <h3 class="card-subtitle">Al cerrar la asistencia no se podrá modificar los valores diligenciados.
-                    </h3>
-                    <br>
-                    <div class="d-flex justify-content-between">
+      
 
-                        <button id="confirmAtt" type="button" class="btn btn-primary">Confirmar</button>
-                        <button id="cancelAtt" type="button" class="btn btn-secondary"
-                            onclick="location.href=''">Cancelar</button>
+         <div class="modal fade" id="modal1" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalLabel">¿Estás seguro de que deseas cerrar la asistencia?</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
+
+                    <div class="modal-body">
+                        Al cerrar la asistencia no se podrá modificar los valores diligenciados.
+                    </div>
+
+                    <div class="modal-footer">
+                        <button id="confirmAtt" type="button" class="btn  btn-primary">Confirmar</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    </div>
+
                 </div>
             </div>
         </div>

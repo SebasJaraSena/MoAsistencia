@@ -122,11 +122,12 @@ Example context (json):
 
 
 <div class="container">
-    <div class="d-flex align-items-center mb-3" id=table_search>
-        <label for="searchInput" class="mb-0"><strong>Buscar:</strong></label>
-        <input type="text" id="searchInput" class="form-control"
-            placeholder="Buscar por documento, apellidos, nombres o correo">
-    </div>
+   <form method="get" action="/{{dirroot}}/local/asistencia/history.php" class="d-flex align-items-center mb-3" style="gap: 10px;">
+    <input type="hidden" name="courseid" value="{{courseid}}">
+    <input type="hidden" name="limit" value="{{limit}}">
+    <input type="text" name="search" class="form-control" value="{{search}}" placeholder="Buscar por documento, apellidos, nombres o correo">
+    <button type="submit" class="btn btn-primary">Buscar</button>
+</form>
 
     <div class="fortable" style="width:auto; overflow-x: auto">
 
@@ -219,7 +220,7 @@ Example context (json):
         {{^current}}
 
         <button type="button" class="btn btn-primary"
-            onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page={{page}}&info=h&initial={{initial_value}}&final={{final_value}}&filtro_fecha={{#day}}day{{/day}}{{#week}}week{{/week}}{{#range_dates}}range_dates{{/range_dates}}&range={{range}}&limit={{limit}}'">{{page}}</button>
+            onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page={{page}}&info=h&initial={{initial_value}}&final={{final_value}}&filtro_fecha={{#day}}day{{/day}}{{#week}}week{{/week}}{{#range_dates}}range_dates{{/range_dates}}&range={{range}}&limit={{limit}}&search={{search}}'">{{page}}</button>
 
 
         {{/current}}

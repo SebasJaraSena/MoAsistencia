@@ -6,16 +6,19 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/excellib.class.php');
 require_once($CFG->dirroot . '/local/asistencia/externallib.php');
 
-class history_report_downloader {
+class history_report_downloader
+{
 
     private $search;
 
-    public function __construct($courseid = null, $search = '') {
+    public function __construct($courseid = null, $search = '')
+    {
         // El parámetro courseid se deja por compatibilidad, pero no se usa
         $this->search = trim(preg_replace('/\s+/', ' ', strtolower($search)));
     }
 
-    public function generate_and_download() {
+    public function generate_and_download()
+    {
         // Obtener todos los logs usando la misma función que history.php
         $activities = \local_asistencia_external::fetch_activities_report();
 
