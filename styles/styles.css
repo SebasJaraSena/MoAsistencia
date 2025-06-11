@@ -44,6 +44,16 @@ select.form-select-h {
   border-radius: 4px;
 }
 
+/* Resalta la celda completa */
+.error-cell {
+  background-color: #ffe6e6;    /* fondo rojo muy suave */
+}
+/* Opcional: resalta solo el input/textarea */
+.error-cell .extra-input {
+  border-color: #dc3545 !important; /* rojo bootstrap */
+  background-color: #f8d7da;        /* fondo rojo claro */
+}
+
 .sticky-column {
   background-color: #f1f1f1;
   z-index: 1;

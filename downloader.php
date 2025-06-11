@@ -31,6 +31,7 @@ $userid = $USER->id;
 $initialdate = $_GET['initialdate'];
 $finaldate = $_GET['finaldate'];
 $cumulous = $_GET['cumulous'];
+$search = $_GET['search'] ?? '';
 
 /* $data = json_decode($urldata, true); */
 $urldata = $_GET['urldata'] ?? null;
@@ -46,6 +47,14 @@ $attendancehistory = json_decode(json_encode($DB->get_records('local_asistencia_
 $shortname = json_decode(json_encode($DB->get_record('course', ['id' => $courseid], 'shortname')), true)['shortname'];
 
 $result = local_asistencia_external::fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid);
+if ($search !== '') {
+    $result = array_filter($result, function ($row) use ($search) {
+        return stripos($row['username'], $search) !== false
+            || stripos($row['lastname'], $search) !== false
+            || stripos($row['firstname'], $search) !== false
+            || stripos($row['email'], $search) !== false;
+    });
+}
 
 $contextid = context_course::instance($courseid)->id;
 $studentdata = fetch_students::fetch_students($contextid, $courseid, 5, 0, 1000); // Role ID 5 = estudiantes
@@ -69,4 +78,8 @@ unset($row); // buena práctica para evitar problemas con el foreach por referen
 
 local_asistencia_external::attendance_report($result, $initialdate, $finaldate, $shortname);
 
+if (isset($_GET['download']) && $_GET['download'] === '1') {
+    // Ya enviamos el fichero: terminamos aquí.
+    exit;
+}
 redirect($CFG->wwwroot . "/local/asistencia/history.php?courseid=$courseid&page=1&info=h&cumulous=$cumulous&filtro_fecha=0");

@@ -37,20 +37,35 @@ $courseid = required_param('courseid', PARAM_INT);
 $pageurl = optional_param('page', 1, PARAM_INT);
 $search = optional_param('search', '', PARAM_RAW);
 
+$course   = get_course($courseid);
+require_login($course);
+$context = context_course::instance($courseid);
 $params = [
     'courseid' => $courseid,
     'page' => $pageurl
 ];
 
+// Parámetros y URL actual
 $currenturl = new moodle_url('/local/asistencia/activities.php', $params);
 $dircomplement = explode("/", $currenturl->get_path());
-
-$context = context_system::instance();
 $PAGE->set_url($currenturl);
 $PAGE->set_context($context);
-$PAGE->set_title('Logs de descargas');
-$PAGE->requires->js_call_amd('local_asistencia/attendance_views', 'init');
 
+//  Carga el curso ANTES de modificar el navbar
+$PAGE->set_course(get_course($courseid));
+
+// Verificar permisos
+require_capability('local/asistencia:view', $context);
+
+// Construye el breadcrumb completo
+local_asistencia_build_breadcrumbs($courseid, 'logs_descarga');
+
+//  Título y heading
+$PAGE->set_title('Logs de descargas');
+$PAGE->set_heading(get_course($courseid)->shortname);
+
+//  JS y CSS
+$PAGE->requires->js_call_amd('local_asistencia/attendance_views', 'init');
 $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', ['v' => time()]));
 
 $dbname = $DB->get_record('local_asistencia_config', ['name' => 'dbname'])->value;
@@ -62,37 +77,42 @@ try {
 
     // 🔍 Aplicar filtro si se usa el buscador
     if (!empty($search)) {
-        // Normalizar búsqueda: minúsculas, sin espacios múltiples
-        $search = strtolower(trim(preg_replace('/\s+/', ' ', $search)));
-
-        $activities = array_filter($activities, function ($activity) use ($search) {
-            // Convertir el objeto completo a un array plano si es necesario
-            if (is_object($activity)) {
-                $activity = (array) $activity;
-            }
-
-            // Convertir todo el array a un solo string
-            $fulltext = implode(' ', array_map(function ($value) {
-                if (is_array($value) || is_object($value)) {
-                    return ''; // Ignorar valores complejos
-                }
-                return $value;
-            }, $activity));
-
-            // Normalizar texto: minúsculas, sin saltos ni múltiples espacios
-            $normalized = strtolower(trim(preg_replace('/\s+/', ' ', $fulltext)));
-
-            return strpos($normalized, $search) !== false;
-        });
+    // Función para normalizar tildes y espacios
+    function normalize_for_search($text) {
+        $text = mb_strtolower($text, 'UTF-8');
+        $text = str_replace(
+            ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ'],
+            ['a', 'e', 'i', 'o', 'u', 'u', 'n'],
+            $text
+        );
+        $text = preg_replace('/\s+/', ' ', $text);
+        return trim($text);
     }
+
+    $normalizedSearch = normalize_for_search($search);
+
+    $activities = array_filter($activities, function ($activity) use ($normalizedSearch) {
+        if (is_object($activity)) {
+            $activity = (array) $activity;
+        }
+
+        $fulltext = implode(' ', array_map(function ($value) {
+            return is_scalar($value) ? $value : '';
+        }, $activity));
+
+        $normalized = normalize_for_search($fulltext);
+
+        return strpos($normalized, $normalizedSearch) !== false;
+    });
+}
+
 
     $form = new edit();
     $numpages = (int) ceil(count($activities) / 10);
 
-    local_asistencia_setup_breadcrumb('Logs de descargas ');
     $course = get_course($courseid);
     $shortname = $course->shortname;
-    $PAGE->set_heading($shortname);
+    
     echo $OUTPUT->header();
     $currentpage = (int) $pageurl;
     $numpages = (int) ceil(count($activities) / 10);

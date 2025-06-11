@@ -131,7 +131,7 @@ class detailed_report_donwloader extends dataformat
     {
         global $DB;
 
-        \core\notification::add("No hay información de asistencia en el rango de fechas.", \core\output\notification::NOTIFY_ERROR);
+        \core\notification::add("No hay información de asistencia.", \core\output\notification::NOTIFY_ERROR);
         try {
             $toinsert = new \stdClass;
             $toinsert->code = "43";

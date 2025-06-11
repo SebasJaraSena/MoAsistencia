@@ -4,7 +4,8 @@ defined('MOODLE_INTERNAL') || die();
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/externallib.php');
 
-function local_asistencia_extend_navigation_course($navigation, $course, $context) {
+function local_asistencia_extend_navigation_course($navigation, $course, $context)
+{
     if (!has_capability('local/asistencia:view', $context)) {
         return;
     }
@@ -19,8 +20,9 @@ function local_asistencia_extend_navigation_course($navigation, $course, $contex
         'local_asistencia'
     );
 }
+/*
 function local_asistencia_setup_breadcrumb($page_title)
-{
+{ 
     global $PAGE, $SESSION;
 
     // Obtener todos los parámetros de la URL actual
@@ -46,13 +48,13 @@ function local_asistencia_setup_breadcrumb($page_title)
         ];
     }
 
-   // **Eliminar duplicados por URL filtrada**
+    // **Eliminar duplicados por URL filtrada**
     foreach ($SESSION->asistencia_breadcrumb as $key => $breadcrumb) {
         if ($breadcrumb['url'] === $currenturl->out(false) || $breadcrumb['name'] === $page_title) {
             unset($SESSION->asistencia_breadcrumb[$key]);
         }
     }
-    
+
     // Reindexar array
     $SESSION->asistencia_breadcrumb = array_values($SESSION->asistencia_breadcrumb);
 
@@ -78,5 +80,27 @@ function local_asistencia_setup_breadcrumb($page_title)
     // **Agregar rutas filtradas a la miga de pan**
     foreach ($SESSION->asistencia_breadcrumb as $breadcrumb) {
         $PAGE->navbar->add($breadcrumb['name'], new moodle_url($breadcrumb['url']));
+    }
+} */
+function local_asistencia_build_breadcrumbs(int $courseid, string $pagekey, array $pagelink = []) {
+    global $PAGE;
+    // “Asistencia” → index.php
+    $PAGE->navbar->add(
+        get_string('pluginname','local_asistencia'),
+        new moodle_url('/local/asistencia/index.php',['courseid'=>$courseid])
+    );
+    // “Menú asistencia” → index.php
+    $PAGE->navbar->add(
+        get_string('menuasistencia','local_asistencia'),
+        new moodle_url('/local/asistencia/index.php',['courseid'=>$courseid])
+    );
+    // último nivel (sin link si $pagelink vacío)
+    if ($pagelink) {
+        $PAGE->navbar->add(
+            get_string($pagekey,'local_asistencia'),
+            new moodle_url($pagelink['url'], $pagelink['params'])
+        );
+    } else {
+        $PAGE->navbar->add(get_string($pagekey,'local_asistencia'));
     }
 }

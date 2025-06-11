@@ -24,7 +24,7 @@
 
 require_once($CFG->libdir . '/excellib.class.php'); // Include Moodle's built-in Excel library
 require_once(__DIR__ . '/../../../../config.php'); // Asegúrate de cargar el entorno Moodle
-
+require_once($GLOBALS['CFG']->libdir . '/excellib.class.php');
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
@@ -33,9 +33,11 @@ class report_donwloader
     public static function attendance_report($result, $initialdate, $finaldate, $shortname)
     {
         global $DB, $USER;
+        session_write_close();
 
-        require_once($GLOBALS['CFG']->libdir . '/excellib.class.php');
-        $filename = 'reporte_asistencia_' . $shortname . '_' . $initialdate . '_' . $finaldate . '.xlsx';
+
+        $downloadDate = date('Y-m-d_H-i-s');
+        $filename = 'reporte_asistencia_' . $shortname . '_' . $downloadDate . '.xlsx';
 
         // Filtrar estudiantes con asistencia
         $attendanceFound = array_filter($result, function ($row) {
@@ -59,8 +61,7 @@ class report_donwloader
             sort($dates);
 
             // 3. Cabeceras 
-
-            $fixedHeaders = ['username', 'firstname', 'lastname', 'email', 'phone1', 'status'];
+            $fixedHeaders = ['username', 'firstname', 'lastname', 'email', 'idtype', 'status'];
             $headers = array_map(function ($header) {
                 switch ($header) {
                     case 'username':
@@ -71,7 +72,7 @@ class report_donwloader
                         return 'Apellidos';
                     case 'email':
                         return 'Correo electrónico';
-                    case 'phone1':
+                    case 'idtype':
                         return 'Tipo de identificación';
                     case 'status':
                         return 'Estado del Aprendiz';
@@ -88,66 +89,109 @@ class report_donwloader
                 $headers[] = "$date - Instructor";
             }
 
-
             // 4. Reorganizar por estudiante
             $sortedData = [];
             foreach ($result as $row) {
-                $studentFixedData = [];
-                foreach ($fixedHeaders as $field) {
-                    if ($field === 'status') {
-                        $statusValue = isset($row[$field]) ? (int) $row[$field] : 0;
-                        $studentFixedData[] = $statusValue === 1 ? 'SUSPENDIDO' : 'ACTIVO';
-                    } else {
-                        $studentFixedData[] = $row[$field] ?? '';
-                    }
+
+                // — EXTRA: extraer idtype y limpiar username —
+                $rawUsername = trim($row['username'] ?? '');
+                if (preg_match('/^(\d+)(\D+)$/i', $rawUsername, $m)) {
+                    // m[1] = todos los dígitos, m[2] = sufijo no numérico
+                    $row['username'] = $m[1];
+                    $row['idtype'] = strtoupper($m[2]);
+                } else {
+                    // si no hay sufijo, dejamos sólo dígitos y vaciamos idtype
+                    $row['username'] = preg_replace('/\D+/', '', $rawUsername);
+                    $row['idtype'] = '';
                 }
 
+                // 4.1 Inicializar arrays de asistencia y flag
                 $dayState = [];
                 $dayTime = [];
-                $dayTeacher = [];
                 $dayObservation = [];
+                $dayTeacher = [];
+                $hasAttendance = false;
+
+                // 4.2 Recolectar datos por día y marcar si hay asistencia
                 $i = 0;
                 while (isset($row["day$i"])) {
                     $date = $row["day$i"];
-                    $state = $row["state$i"] ?? '';
-                    $time = $row["time$i"] ?? '';
-                    $observation = $row["observation$i"] ?? '';
-                    $teacher = $row["teacher$i"] ?? '';
+                    $state = trim($row["state$i"] ?? '');
+                    $time = trim($row["time$i"] ?? '');
+                    $obs = trim($row["observation$i"] ?? '');
+                    $teacher = trim($row["teacher$i"] ?? '');
+
+                    if ($state !== '' || $time !== '') {
+                        $hasAttendance = true;
+                    }
 
                     $dayState[$date][] = $state;
                     $dayTime[$date][] = $time;
-                    // Solo guarda la observación si hay contenido real
-                    if (trim($observation) !== '') {
-                        $dayObservation[$date][] = $observation;
+                    if ($obs !== '') {
+                        $dayObservation[$date][] = $obs;
                     }
                     $dayTeacher[$date][] = $teacher;
                     $i++;
                 }
 
+                // 4.3 Si nunca hubo asistencia, saltamos este registro
+                if (!$hasAttendance) {
+                    continue;
+                }
+
+                // 4.4 Armar la parte fija de la fila (incluye ahora idtype correctamente)
+                $studentFixedData = [];
+                foreach ($fixedHeaders as $field) {
+                    if ($field === 'status') {
+                        $val = isset($row[$field]) ? (int) $row[$field] : 0;
+                        $studentFixedData[] = $val === 1 ? 'SUSPENDIDO' : 'ACTIVO';
+                    } else {
+                        $studentFixedData[] = $row[$field] ?? '';
+                    }
+                }
+
+                // 4.5 Añadir datos dinámicos fecha a fecha
                 $finalRow = $studentFixedData;
                 foreach ($dates as $date) {
+                    // Estado
                     $finalRow[] = isset($dayState[$date])
-                        ? implode("\n", array_map(function ($v, $i) {
-                            return ($i + 1) . '. ' . $v;
-                        }, $dayState[$date], array_keys($dayState[$date])))
+                        ? implode("\n", array_map(
+                            function ($v, $i) {
+                                return ($i + 1) . '. ' . $v;
+                            },
+                            $dayState[$date],
+                            array_keys($dayState[$date])
+                        ))
                         : '';
-
+                    // Horas
                     $finalRow[] = isset($dayTime[$date])
-                        ? implode("\n", array_map(function ($v, $i) {
-                            return ($i + 1) . '. (' . $v . ' horas)';
-                        }, $dayTime[$date], array_keys($dayTime[$date])))
+                        ? implode("\n", array_map(
+                            function ($v, $i) {
+                                return ($i + 1) . '. (' . $v . ' horas)';
+                            },
+                            $dayTime[$date],
+                            array_keys($dayTime[$date])
+                        ))
                         : '';
-
+                    // Observaciones
                     $finalRow[] = isset($dayObservation[$date])
-                        ? implode("\n", array_map(function ($v, $i) {
-                            return ($i + 1) . '. ' . $v;
-                        }, $dayObservation[$date], array_keys($dayObservation[$date])))
+                        ? implode("\n", array_map(
+                            function ($v, $i) {
+                                return ($i + 1) . '. ' . $v;
+                            },
+                            $dayObservation[$date],
+                            array_keys($dayObservation[$date])
+                        ))
                         : '';
-
+                    // Instructor
                     $finalRow[] = isset($dayTeacher[$date])
-                        ? implode("\n", array_map(function ($v, $i) {
-                            return ($i + 1) . '. ' . $v;
-                        }, $dayTeacher[$date], array_keys($dayTeacher[$date])))
+                        ? implode("\n", array_map(
+                            function ($v, $i) {
+                                return ($i + 1) . '. ' . $v;
+                            },
+                            $dayTeacher[$date],
+                            array_keys($dayTeacher[$date])
+                        ))
                         : '';
                 }
 
@@ -160,7 +204,6 @@ class report_donwloader
             $sheet->setTitle('Reporte');
 
             $instructor = fullname($USER);
-
             $sheet->setCellValue('A1', "Curso: $shortname");
             $sheet->setCellValue('B1', "Fecha: $initialdate a $finaldate");
             $sheet->setCellValue('C1', "Usuario : $instructor");
@@ -179,21 +222,20 @@ class report_donwloader
             header('Content-Length: ' . filesize($tmp));
             readfile($tmp);
             unlink($tmp);
-
+            exit;
             // Log
             try {
                 $toinsert = new stdClass;
                 $toinsert->code = "40";
                 $toinsert->message = "Reporte generado con nombre \"$filename\".";
-                $toinsert->date = date("Y-m-d H:i:s", time());
+                $toinsert->date = date("Y-m-d H:i:s");
                 $toinsert->userid = $USER->id;
                 $DB->insert_record("local_asistencia_logs", $toinsert);
             } catch (\Throwable $th) {
                 // Silenciar errores
             }
-
         } else {
-            \core\notification::add("No hay información de asistencia en el rango de fechas.", \core\output\notification::NOTIFY_ERROR);
+            \core\notification::add("No hay información de asistencia.", \core\output\notification::NOTIFY_ERROR);
             try {
                 $toinsert = new stdClass;
                 $toinsert->code = "43";

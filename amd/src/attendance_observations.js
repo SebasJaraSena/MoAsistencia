@@ -25,6 +25,12 @@ define(['jquery'], function ($) {
             });
 
             $(document).ready(function () {
+                $('body').on('keydown', 'input[type=number]', function (e) {
+                    if (e.key === '.' || e.key === ',' || e.key === 'e') {
+                        e.preventDefault();
+                    }
+                });
+
                 $('.form-select').each(function () {
                     const selectedValue = $(this).val();
                     const inputContainer = $(this).closest('.select-container').find('.input-container');
@@ -54,6 +60,19 @@ define(['jquery'], function ($) {
                 reportDownloader();
                 tableSize();
             });
+            // Manejo de cambio en selector de cantidad por página
+            $('#perPageSelect').on('change', function () {
+                const perPage = $(this).val();
+                const url = new URL(window.location.href);
+                url.searchParams.set('limit', perPage);
+                //url.searchParams.set('page', 4); // Reiniciar a página 1
+                window.location.href = url.toString();
+            });
+
+            $('form').on('submit', function () {
+                console.log('Formulario enviado desde la página: ' + $('input[name="page"]').val());
+            });
+
 
             function checkAllSelections() {
                 const view = window.location.pathname.split('/').pop().split('.')[0];
@@ -66,27 +85,32 @@ define(['jquery'], function ($) {
 
             function checkAllHours2() {
                 let allValid = true;
-                document.querySelectorAll('td.select-container').forEach(cell => {
-                    const select = cell.querySelector('select.form-select');
-                    if (!select) return;
-                    const value = select.value;
-                    const horas = parseInt(cell.querySelector('input[name^="extrainfoNum"]').value);
+                $('td.select-container').each(function () {
+                    const $cell = $(this);
+                    const value = $cell.find('select.form-select').val();
+                    const $num = $cell.find('input[name^="extrainfoNum"]');
+                    const horas = parseInt($num.val(), 10);
+                    let valid = true;
+
                     if (['0', '2', '3'].includes(value)) {
-                        if (isNaN(horas) || horas < 1 || horas > 10) {
-                            allValid = false;
+                        if (isNaN(horas) || horas < 1 || horas > 10 || !Number.isInteger(horas)) {
+                            valid = false;
                         }
+                    }
+
+                    if (!valid) {
+                        allValid = false;
+                        $cell.addClass('error-cell');
+                    } else {
+                        $cell.removeClass('error-cell');
                     }
                 });
 
-                const saveButton = document.getElementById('saveButton');
-                const warning = document.getElementById('saveWarning');
+                const saveButton = $('#saveButton');
+                const warning = $('#saveWarning');
 
-                saveButton.disabled = !allValid;
-                if (!allValid) {
-                    warning.style.display = 'block';
-                } else {
-                    warning.style.display = 'none';
-                }
+                saveButton.prop('disabled', !allValid);
+                warning.toggle(!allValid);
             }
 
 
@@ -100,27 +124,32 @@ define(['jquery'], function ($) {
 
             function checkAllHours() {
                 let allValid = true;
-                document.querySelectorAll('td.select-container').forEach(cell => {
-                    const select = cell.querySelector('select.form-select');
-                    if (!select) return;
-                    const value = select.value;
-                    const horas = parseInt(cell.querySelector('input[name^="extrainfoNum"]').value);
+                $('td.select-container').each(function () {
+                    const $cell = $(this);
+                    const value = $cell.find('select.form-select').val();
+                    const $num = $cell.find('input[name^="extrainfoNum"]');
+                    const horas = parseInt($num.val(), 10);
+                    let valid = true;
+
                     if (['0', '2', '3'].includes(value)) {
-                        if (isNaN(horas) || horas < 1 || horas > 10) {
-                            allValid = false;
+                        if (isNaN(horas) || horas < 1 || horas > 10 || !Number.isInteger(horas)) {
+                            valid = false;
                         }
+                    }
+
+                    if (!valid) {
+                        allValid = false;
+                        $cell.addClass('error-cell');
+                    } else {
+                        $cell.removeClass('error-cell');
                     }
                 });
 
-                const saveButton = document.getElementById('saveButton');
-                const warning = document.getElementById('saveWarning');
+                const saveButton = $('#saveButton');
+                const warning = $('#saveWarning');
 
-                saveButton.disabled = !allValid;
-                if (!allValid) {
-                    warning.style.display = 'block';
-                } else {
-                    warning.style.display = 'none';
-                }
+                saveButton.prop('disabled', !allValid);
+                warning.toggle(!allValid);
             }
 
             // Fecha rango
@@ -180,7 +209,39 @@ define(['jquery'], function ($) {
                 }
                 window.onload = adjustTableSize;
             }
+            //modal de paginacion
+            let asistenciaModificada = false;
+            let urlPendiente = null;
 
+            // Detectar cambios en los campos de asistencia
+            $('select[name^="attendance"], input[name^="attendance"]').on('change', function () {
+                asistenciaModificada = true;
+            });
+
+            // Interceptar botón de paginación
+            $('.pagelink').on('click', function (e) {
+                e.preventDefault();
+                const url = $(this).data('url');
+
+                if (asistenciaModificada) {
+                    urlPendiente = url;
+                    $('#modal1').modal('show');
+                } else {
+                    window.location.href = url;
+                }
+            });
+
+            // Confirmar navegación
+            $('#confirmAtt').on('click', function () {
+                if (urlPendiente) {
+                    window.location.href = urlPendiente;
+                }
+            });
+
+            // Opcional: limpiar URL pendiente si cancela
+            $('#modal1 .btn-secondary, #modal1 .close').on('click', function () {
+                urlPendiente = null;
+            });
         }
     };
 });

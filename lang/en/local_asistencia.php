@@ -22,6 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 $string['pluginname'] = 'Asistencia';
 $string['asistencia'] = 'Asistencia';
 $string['asistencia:manage'] = 'Manage Asistenica local';
@@ -38,3 +39,8 @@ $string['dbtablename'] = 'Nombre de la tabla:';
 $string['dbtablefieldname'] = 'Nombre del campo en la tabla:';
 $string['namefilter'] = 'Filtro por nombre';
 $string['pluginmanagetitle'] = 'Configuración de base de datos externa';
+ $string['menuasistencia']      = 'Menú asistencia';
+ $string['asistencia_general']  = 'Asistencia general';
+ $string['asistencia_anterior']  = 'Asistencia anterior';
+ $string['historial']  = 'Histórico';
+ $string['logs_descarga']  = 'Logs de descarga';

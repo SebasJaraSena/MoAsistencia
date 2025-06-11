@@ -18,7 +18,6 @@ along with Moodle. If not, see
 {{!
 @template local_asistencia/manage
 
-
 Example context (json):
 {
 
@@ -48,7 +47,7 @@ Example context (json):
                 <input type="hidden" name="info" value="h">
                 <input type="hidden" name="range" value="{{range}}">
                 <input type="hidden" name="limit" value="{{limit}}">
-
+                {{#search}}<input type="hidden" name="search" value="{{search}}">{{/search}}
                 <div class="mb-2">
                     <select class="custom-select" id="date-range-select" name="filtro_fecha">
                         <option value="0" {{#option}}selected{{/option}}>Seleccione una opción</option>
@@ -85,12 +84,12 @@ Example context (json):
     <div class="row mb-3 justify-content-between">
         <!-- Botones de descarga a la izquierda -->
         <div class="col-md-auto d-flex gap-2 g-2 my-2">
-            <button type="button" id="color_btn" class="btn btn-primary "
-                onclick="location.href='/{{dirroot}}/local/asistencia/downloader.php?courseid={{courseid}}&cumulous={{range}}&initialdate={{initial_value}}&finaldate={{final_value}}'">
-                <i class="fa-regular fa-circle-down" style="margin-right: 8px;"></i>
+            <a id="color_btn" class="btn btn-primary" role="button"
+                href="/{{dirroot}}/local/asistencia/downloader.php?courseid={{courseid}}&cumulous={{range}}&initialdate={{initial_value}}&finaldate={{final_value}}{{#search}}&search={{searchEscaped}}{{/search}}">
+                <i class="fa-regular fa-circle-down" style="margin-right:8px;"></i>
+                Descargar reporte
+            </a>
 
-                <span> Descargar reporte</span>
-            </button>
             <button type="button" class="btn btn-primary mx-2 hidden"
                 onclick="location.href='/{{dirroot}}/local/asistencia/detailed_report_downloader.php?courseid={{courseid}}&cumulous={{range}}&initialdate={{initial_value}}&finaldate={{final_value}}'"
                 id="detailed_donwloader" title="Habilitado para rangos de 7 días o menos.">
@@ -100,133 +99,147 @@ Example context (json):
 
         <!-- Botón de mostrar consolidado a la derecha -->
         <div class="col-md-auto my-2">
-            <button type="button" class="btn btn-primary" id="color_btn"
-                onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page=1&info=h&initial={{initial_value}}&final={{final_value}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}&range={{#isrange1}}0{{/isrange1}}{{^isrange1}}1{{/isrange1}}&limit={{limit}}'">
-                <i class="fa-solid fa-table" style="margin-right: 8px;"></i>
+            <!-- Botón “Mostrar consolidado” -->
+            <button id="color_btn" type="button" class="btn btn-primary"
+                onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&info=h&page=1&filtro_fecha={{#day}}day{{/day}}{{#week}}week{{/week}}{{#range_dates}}range_dates{{/range_dates}}&initial={{initial_value}}&final={{final_value}}&range={{#isrange1}}0{{/isrange1}}{{^isrange1}}1{{/isrange1}}{{#search}}&search={{{searchEscaped}}}{{/search}}&limit={{limit}}'">
+                <i class="fa-solid fa-table" style="margin-right:8px;"></i>
                 {{^isrange1}}Mostrar consolidado por todos los instructores{{/isrange1}}
                 {{#isrange1}}Mostrar mi asistencia{{/isrange1}}
             </button>
 
 
-
-            <button type="button" class="btn btn-primary" id="color_btn"
-                onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&info=h&page=1&initial={{initial}}&final={{final}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}{{#range}}&range=1{{/range}}{{^range}}&range=0{{/range}}{{#limit}}&limit=0{{/limit}}{{^limit}}&limit=1&page=1{{/limit}}'">
-                {{#limit}} <i class="fa-solid fa-list" style="margin-right: 8px;"></i>Ver listado
-                completo{{/limit}}{{^limit}}<i class="fa-solid fa-file-alt" style="margin-right: 8px;"></i>Ver
-                paginado{{/limit}}
+            <!-- Botón “Ver listado / Ver paginado” -->
+            <button id="color_btn" type="button" class="btn btn-primary"
+                onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&info=h&page=1&initial={{initial_value}}&final={{final_value}}{{#day}}&day=1{{/day}}{{#week}}&week=1{{/week}}{{#range_dates}}&range_dates=1{{/range_dates}}&range={{#range}}1{{/range}}{{^range}}0{{/range}}{{#limit}}&limit=0{{/limit}}{{^limit}}&limit=1&page=1{{/limit}}{{#search}}&search={{{searchEscaped}}}{{/search}}'">
+                {{#limit}}
+                <i class="fa-solid fa-list" style="margin-right:8px;"></i>Ver listado completo
+                {{/limit}}
+                {{^limit}}
+                <i class="fa-solid fa-file-alt" style="margin-right:8px;"></i>Ver paginado
+                {{/limit}}
             </button>
-
         </div>
     </div>
 </div>
 
-
 <div class="container">
-   <form method="get" action="/{{dirroot}}/local/asistencia/history.php" class="d-flex align-items-center mb-3" style="gap: 10px;">
-    <input type="hidden" name="courseid" value="{{courseid}}">
-    <input type="hidden" name="limit" value="{{limit}}">
-    <input type="text" name="search" class="form-control" value="{{search}}" placeholder="Buscar por documento, apellidos, nombres o correo">
-    <button type="submit" class="btn btn-primary">Buscar</button>
-</form>
+    <form method="get" action="/{{dirroot}}/local/asistencia/history.php" class="d-flex align-items-center mb-3"
+        style="gap: 10px;">
+
+        <input type="hidden" name="courseid" value="{{courseid}}">
+        <input type="hidden" name="info" value="{{info}}">
+        <input type="hidden" name="range" value="{{range}}">
+        <input type="hidden" name="limit" value="{{limit}}">
+
+        <!--  ← ESTE CAMPO SE CONSTRUYE -->
+        <input type="hidden" name="filtro_fecha"
+            value="{{#day}}day{{/day}}{{#week}}week{{/week}}{{#range_dates}}range_dates{{/range_dates}}">
+
+        <!-- flags para que Mustache vuelva a “marcar” la opción correcta en el select -->
+        {{#day}} <input type="hidden" name="day" value="1">{{/day}}
+        {{#week}} <input type="hidden" name="week" value="1">{{/week}}
+        {{#range_dates}} <input type="hidden" name="range_dates" value="1">{{/range_dates}}
+
+        <!-- tus fechas -->
+        <input type="hidden" name="initial" value="{{initial_value}}">
+        <input type="hidden" name="final" value="{{final_value}}">
+
+        <!-- y la búsqueda -->
+        <input type="text" name="search" class="form-control" value="{{search}}"
+            placeholder="Buscar por documento, apellidos,…">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+    </form>
 
     <div class="fortable" style="width:auto; overflow-x: auto">
+        <table class="table table-hover table-container" id="attendance-table">
+            <thead>
+                <tr>
+                    <th class="sticky-column">
+                        DOCUMENTO
+                    </th>
+                    <th class="sticky-column">
+                        APELLIDOS
+                    </th>
+                    <th class="sticky-column">
+                        NOMBRES
+                    </th>
+                    <th class="sticky-column">
+                        CORREO
+                    </th>
+                    <th class="sticky-column">
+                        ESTADO
+                    </th>
 
+                    {{#monthheader}}
+                    <th>
+                        {{day}}<br>{{date}}
+                    </th>
+                    {{/monthheader}}
 
-    <table class="table table-hover table-container" id="attendance-table">
-        <thead>
-            <tr>
-                <th class="sticky-column">
-                    DOCUMENTO
-                </th>
-                <th class="sticky-column">
-                    APELLIDOS
-                </th>
-                <th class="sticky-column">
-                    NOMBRES
-                </th>
-                <th class="sticky-column">
-                    CORREO
-                </th>
-                <th class="sticky-column">
-                    ESTADO
-                </th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#students}}
+                <tr>
+                    <td class="sticky-column">
+                        {{username}}
+                    </td>
+                    <td class="sticky-column">
+                        {{lastname}}
+                    </td>
+                    <td class="sticky-column">
+                        {{firstname}}
+                    </td>
+                    <td class="sticky-column">
+                        {{email}}
+                    </td>
+                    <td class="sticky-column">
+                        {{#status}}SUSPENDIDO{{/status}}
+                        {{^status}}ACTIVO{{/status}}
+                    </td>
+                    {{#month}}
+                    <td class="select-container">
+                        {{#current}}
+                        <p>No Info.</p>
+                        {{/current}}
+                        {{^current}}
+                        {{#selection}}
+                        {{#../range}} {{! PERSONAL (range = 1) }}
+                        <p>{{op}}</p>
+                        <p>Horas ausencia {{time}}</p>
+                        {{/../range}}
 
-                {{#monthheader}}
-                <th>
-                    {{day}}<br>{{date}}
-                </th>
-                {{/monthheader}}
+                        {{^../range}} {{! CONSOLIDADO (range = 0) }}
+                        {{#details}}
+                        <p>{{.}}</p>
+                        {{/details}}
 
-            </tr>
-        </thead>
-        <tbody>
-            {{#students}}
-            <tr>
-                <td class="sticky-column">
-                    {{username}}
-                </td>
-                <td class="sticky-column">
-                    {{lastname}}
-                </td>
-                <td class="sticky-column">
-                    {{firstname}}
-                </td>
-                <td class="sticky-column">
-                    {{email}}
-                </td>
-                <td class="sticky-column">
-                    {{#status}}SUSPENDIDO{{/status}}
-                    {{^status}}ACTIVO{{/status}}
-                </td>
-                {{#month}}
-                <td class="select-container">
-                    {{#current}}
-                    <p>No Info.</p>
-                    {{/current}}
-                    {{^current}}
-                    {{#selection}}
-                    {{#../range}} {{! PERSONAL (range = 1) }}
-                    <p>{{op}}</p>
-                    <p>Horas ausencia {{time}}</p>
-                    {{/../range}}
-
-                    {{^../range}} {{! CONSOLIDADO (range = 0) }}
-                    {{#details}}
-                    <p>{{.}}</p>
-                    {{/details}}
-
-                    {{^details}}
-                    <p> {{op}}</p>
-                    <p>Horas ausencia: {{time}}</p>
-                    {{/details}}
-                    {{/../range}}
-                    {{/selection}}
-                    {{/current}}
-                </td>
-                {{/month}}
-            </tr>
-            {{/students}}
-        </tbody>
-    </table>
-
-</div>
-<div>
-    <br>
-    <div class="container">
-        {{#listpages}}
-        {{#current}}
-        <button type="button" class="btn btn-secondary" disabled>{{page}}</button>
-        {{/current}}
-        {{^current}}
-
-        <button type="button" class="btn btn-primary"
-            onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page={{page}}&info=h&initial={{initial_value}}&final={{final_value}}&filtro_fecha={{#day}}day{{/day}}{{#week}}week{{/week}}{{#range_dates}}range_dates{{/range_dates}}&range={{range}}&limit={{limit}}&search={{search}}'">{{page}}</button>
-
-
-        {{/current}}
-        {{/listpages}}
+                        {{^details}}
+                        <p> {{op}}</p>
+                        <p>Horas ausencia: {{time}}</p>
+                        {{/details}}
+                        {{/../range}}
+                        {{/selection}}
+                        {{/current}}
+                    </td>
+                    {{/month}}
+                </tr>
+                {{/students}}
+            </tbody>
+        </table>
     </div>
-    <br>
-    <br>
-
+    <div>
+        <br>
+        <div class="container">
+            {{#listpages}}
+            {{#current}}
+            <button type="button" class="btn btn-secondary" disabled>{{page}}</button>
+            {{/current}}
+            {{^current}}
+            <button type="button" class="btn btn-primary"
+                onclick="location.href='/{{dirroot}}/local/asistencia/history.php?courseid={{courseid}}&page={{page}}&info=h&initial={{initial_value}}&final={{final_value}}&filtro_fecha={{#day}}day{{/day}}{{#week}}week{{/week}}{{#range_dates}}range_dates{{/range_dates}}&range={{range}}&limit={{limit}}&search={{search}}'">{{page}}</button>
+            {{/current}}
+            {{/listpages}}
+        </div>
+    </div>
 </div>

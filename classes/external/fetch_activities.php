@@ -34,7 +34,7 @@ class fetch_activities
     global $DB;
 
     $studentsinfo = [];
-    $arrayopts = ['-1' => "SUSPENDIDO", 0 => "INCUMPLIMIENTO_INJUSTIFICADO", 1 => "ASISTIO", 2 => "INASISTENCIA_NO_PROGRAMADA", 3 => "INASISTENCIA_PROGRAMADA", '-8' => "NA"];
+    $arrayopts = ['-1' => "SUSPENDIDO", 0 => "INCUMPLIMIENTO_INJUSTIFICADO", 1 => "ASISTIÓ", 2 => "INASISTENCIA_NO_PROGRAMADA", 3 => "INASISTENCIA_PROGRAMADA", '-8' => "NA"];
 
     foreach ($attendancehistory as $index => $ah) {
         $id = $ah['student_id'];
@@ -87,7 +87,7 @@ class fetch_activities
         global $DB;
 
         $studentsinfo = [];
-        $arrayopts = ['-1' => "SUSPENDIDO", 0 => "INCUMPLIMIENTO_INJUSTIFICADO", 1 => "ASISTIO", 2 => "INASISTENCIA_NO_PROGRAMADA", 3 => "INASISTENCIA_PROGRAMADA", '-8' => "NA",]; // Se establece el significado de los valores guardados en la asistencia
+        $arrayopts = ['-1' => "SUSPENDIDO", 0 => "INCUMPLIMIENTO_INJUSTIFICADO", 1 => "ASISTIÓ", 2 => "INASISTENCIA_NO_PROGRAMADA", 3 => "INASISTENCIA_PROGRAMADA", '-8' => "NA",]; // Se establece el significado de los valores guardados en la asistencia
         foreach ($attendancehistory as $index => $ah) { // Ciclo para iterar sobre los datos de la asistencia
             $id = $ah['student_id'];
             $studentsinfo[$index] = json_decode(json_encode($DB->get_record('user', ['id' => $id], 'username, lastname, firstname, email, phone1')), true);

@@ -44,17 +44,16 @@ class history_report_downloader
         $workbook->send($filename);
         $worksheet = $workbook->add_worksheet('Historial');
 
-        $headers = ['CÓDIGO', 'MENSAJE', 'FECHA', 'USERNAME'];
+        $headers = [ 'MENSAJE', 'FECHA', 'NOMBRE USUARIO'];
         foreach ($headers as $col => $header) {
             $worksheet->write(0, $col, $header);
         }
 
         $row = 1;
         foreach ($activities as $record) {
-            $worksheet->write($row, 0, $record['code']);
-            $worksheet->write($row, 1, $record['message']);
-            $worksheet->write($row, 2, $record['date']);
-            $worksheet->write($row, 3, $record['username']);
+            $worksheet->write($row, 0, $record['message']);
+            $worksheet->write($row, 1, $record['date']);
+            $worksheet->write($row, 2, $record['username']);
             $row++;
         }
 

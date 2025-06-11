@@ -40,31 +40,41 @@ $attendancepage = $_GET['page'] ?? 1;
 $courseid = $_GET['courseid'];
 $limit = $_GET['limit'] ?? 1;
 
+$context = context_course::instance($courseid);
+
 $params = [
     'courseid' => $courseid,
     'page' => $attendancepage,
     'limit' => $limit,
-    'day' => $day,
-    'week' => $week,
-    'range_dates' => $range_dates,
     'initial' => $_GET['initial'] ?? null,
     'final' => $_GET['final'] ?? null,
     'range' => $_GET['range'] ?? null
 ];
 
+// Parámetros y URL actual
 $currenturl = new moodle_url('/local/asistencia/history.php', array_filter($params));
-$PAGE->set_url($currenturl);
 $dircomplement = explode("/", $currenturl->get_path());
-$context = context_course::instance($courseid);
-
-
 $PAGE->set_url($currenturl);
 $PAGE->set_context($context);
+
+//  Carga el curso ANTES de modificar el navbar
+$PAGE->set_course(get_course($courseid));
+
+// Verificar permisos
+require_capability('local/asistencia:view', $context);
+
+// Construye el breadcrumb completo
+local_asistencia_build_breadcrumbs($courseid, 'historial');
+
+//  Título y heading
 $PAGE->set_title('Históricos Asistencia');
+$PAGE->set_heading(get_course($courseid)->shortname);
+
+//  JS y CSS
 $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
 $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array('v' => time())));
 
-require_capability('local/asistencia:view', $context);
+
 
 // Functions
 function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $userid, $dbtablefieldname, $initialdate, $finaldate, $comulus = 1)
@@ -269,19 +279,15 @@ if ($form->is_cancelled()) {
                 } else {
                     $condition = '';
                 }
-
             }
         }
     }
-
 }
 
 $monthrange = getWeekRange($initialdate->format('Y-m-d'), $finaldate->format('Y-m-d'));
 
-local_asistencia_setup_breadcrumb('Histórico');
 $course = get_course($courseid);
 $shortname = $course->shortname;
-$PAGE->set_heading($shortname);
 echo $OUTPUT->header();
 $userid = $USER->id;
 $adminsarray = explode(",", $DB->get_record('config', ['name' => 'siteadmins'])->value);
@@ -293,47 +299,69 @@ $attendance_data = $cache->get($courseid);
 if (isset($pages_attendance_string)) {
     $search = $_GET['search'] ?? '';
 
-$studentsdata = local_asistencia_external::fetch_students($context->id, $courseid, 5, 0, 10000, '');
-$studentslist = $studentsdata['students_data'];
+    $studentsdata = local_asistencia_external::fetch_students($context->id, $courseid, 5, 0, 10000, '');
+    $studentslist = $studentsdata['students_data'];
 
-// Aplicar búsqueda si existe
-if (!empty($search)) {
-    $search = strtolower(trim(preg_replace('/\s+/', ' ', $search)));
-
-    $studentslist = array_filter($studentslist, function ($student) use ($search) {
-        $student = is_object($student) ? (array)$student : $student;
-        $fulltext = implode(' ', [
-            $student['username'] ?? '',
-            $student['firstname'] ?? '',
-            $student['lastname'] ?? '',
-            $student['email'] ?? '',
-        ]);
-        $normalized = strtolower(trim(preg_replace('/\s+/', ' ', $fulltext)));
-        return strpos($normalized, $search) !== false;
-    });
-}
-
-// Paginación manual
-$totalstudents = count($studentslist);
-$perpage = $limit == 1 ? 10 : 10000;
-$offset = ($attendancepage - 1) * $perpage;
-$pagedstudents = array_slice($studentslist, $offset, $perpage);
-
-// Generar paginador
-$numpages = ceil($totalstudents / $perpage);
-$pages = [];
-for ($i = 1; $i <= $numpages; $i++) {
-    if ($i == 1 || $i == $numpages || abs($i - $attendancepage) <= 2) {
-        $pages[] = [
-            'page' => $i,
-            'current' => $i == $attendancepage,
-            'active' => ''
-        ];
-    } elseif (!empty($pages) && end($pages)['page'] !== '...') {
-        $pages[] = ['page' => '...', 'current' => false, 'active' => 'disabled'];
+    // Aplicar búsqueda si existe
+    function normalize_for_search($text)
+    {
+        // Elimina tildes y convierte a minúsculas
+        $text = mb_strtolower($text, 'UTF-8');
+        $text = str_replace(
+            ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ'],
+            ['a', 'e', 'i', 'o', 'u', 'u', 'n'],
+            $text
+        );
+        $text = preg_replace('/\s+/', ' ', $text); // elimina espacios dobles
+        return trim($text);
     }
-}
 
+    if (!empty($search)) {
+        $normalizedSearch = normalize_for_search($search);
+
+        $studentslist = array_filter($studentslist, function ($student) use ($normalizedSearch) {
+            $student = is_object($student) ? (array) $student : $student;
+            $text = implode(' ', [
+                $student['username'] ?? '',
+                $student['firstname'] ?? '',
+                $student['lastname'] ?? '',
+                $student['email'] ?? '',
+            ]);
+
+            $normalizedStudentText = normalize_for_search($text);
+
+            return strpos($normalizedStudentText, $normalizedSearch) !== false;
+        });
+    }
+
+    // Paginación manual
+    $totalstudents = count($studentslist);
+    $perpage = $limit == 1 ? 10 : 10000;
+    $offset = ($attendancepage - 1) * $perpage;
+    $pagedstudents = array_slice($studentslist, $offset, $perpage);
+
+    // Generar paginador
+    $numpages = ceil($totalstudents / $perpage);
+    $pages = [];
+    for ($i = 1; $i <= $numpages; $i++) {
+        if ($i == 1 || $i == $numpages || abs($i - $attendancepage) <= 2) {
+            $pages[] = [
+                'page' => $i,
+                'current' => $i == $attendancepage,
+                'active' => ''
+            ];
+        } elseif (!empty($pages) && end($pages)['page'] !== '...') {
+            $pages[] = ['page' => '...', 'current' => false, 'active' => 'disabled'];
+        }
+    }
+
+}
+$raw = $cache->get('attendancelist' . $courseid);
+if ($raw !== false && $raw !== null) {
+    $pages_attendance_array = json_decode($raw, true);
+} else {
+    // Sin caché previa, definimos al menos 'pages' para evitar errores
+    $pages_attendance_array = ['pages' => 0];
 }
 
 for ($page = 1; $page <= $pages_attendance_array['pages']; $page++) { // Paginador
@@ -382,9 +410,10 @@ $students = studentsFormatMonth(
 
 
 $studentslist[$attendancepage] = $students;
-$closeattendance = $studentsamount == count($temporalattendance) ? 0 : 1;
+//$closeattendance = $studentsamount == count($temporalattendance) ? 0 : 1;
 $cache->set('attendancelist' . $courseid, json_encode($studentslist));
-
+$search = optional_param('search', '', PARAM_RAW);
+$searchEscaped = rawurlencode($search);
 $studentsstring = $cache->get('attendancelist' . $courseid);
 $students = json_decode($studentsstring, true);
 $templatecontext = (object) [
@@ -403,11 +432,11 @@ $templatecontext = (object) [
     'week' => $week,
     'range_dates' => $range_dates,
     'page' => $_GET['page'] ?? 0,
-    'closeattendance' => $closeattendance,
     'config' => $configbutton,
     'limit' => $limit,
     'dirroot' => $dircomplement[1],
     'search' => $search,
+    'searchEscaped' => $searchEscaped, 
 
 ];
 

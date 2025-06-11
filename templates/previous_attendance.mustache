@@ -40,6 +40,7 @@ Example context (json):
 
 <div class="container ">
     <div class="row attendance-row">
+       
         <div class="col-md-auto">
             <form action="./previous_attendance.php?courseid={{courseid}}&page={{currentpage}}&info=h&range={{range}}"
                 method="POST">
@@ -56,24 +57,35 @@ Example context (json):
 </div>
 
 <br>
+<div class="container ">
+<form method="get" action="/{{dirroot}}/local/asistencia/previous_attendance.php" class="d-flex align-items-center mb-3" style="gap: 10px;">
+    <input type="hidden" name="courseid" value="{{courseid}}">
+    <input type="hidden" name="page" value="1">
+    <input type="text" name="search" class="form-control" placeholder="Buscar por nombre, apellido, documento o email..." value="{{search}}">
+               
+        <button type="submit" class="btn btn-primary">
+         Buscar
+                </button>
+                    {{#search}}
+                    <a href="/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&page=1" class="btn btn-secondary">
+                         Limpiar
+                    </a>
+                    {{/search}}
+               
+    
+</form>
+        
 <form action="./previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}&weeks={{weeks}}"
     method="POST" id="course_{{courseid}}">
-
-    <input type="hidden" name="courseid" value="{{courseid}}">
-    <input type="hidden" name="teacherid" value="{{teacherid}}">
-    <input type="hidden" name="numweeks" value="{{weeks}}">
-
     <div class="container">
-        <div class="d-flex align-items-center mb-3" id=table_search>
-            <label for="searchInput" class="mb-0"><strong>Buscar:</strong></label>
-            <input type="text" id="searchInput" class="form-control"
-                placeholder="Buscar por documento, apellidos, nombres o correo">
-        </div>
+        
 
         <div class="fortable" style="width:auto; overflow-x: auto">
-
             <input type="hidden" id="courseid" name="courseid" value="{{courseid}}">
             <input type="hidden" id="teacher_{{id}}" name="teacherid" value="{{teacherid}}">
+            <input type="hidden" name="numweeks" value="{{weeks}}">
+            <input type="hidden" name="page"  value="{{page}}">
+
             <table class="table table-hover table-container" id="attendance-table">
                 <thead>
                     <tr>
@@ -133,18 +145,18 @@ Example context (json):
                                 <option value="1" {{#selection.op1}}selected{{/selection.op1}} title="Asistió">A
                                 </option>
                                 <option value="0" {{#selection.op0}}selected{{/selection.op0}}
-                                    title="Incumplimiento injustificado">I</option>
+                                    title="Incumplimiento injustificado">II</option>
                                 <option value="2" {{#selection.op2}}selected{{/selection.op2}}
-                                    title="Inasistencia no programada">R
+                                    title="Inasistencia no programada">INP
                                 </option>
                                 <option value="3" {{#selection.op3}}selected{{/selection.op3}}
-                                    title="Inasistencia programada">EM
+                                    title="Inasistencia programada">IP
                                 </option>
                             </select>
 
                             <div class="input-container">
                                 <input type="number" name="extrainfoNum[{{id}}][{{fulldate}}]"
-                                    class="form-control extra-input" placeholder="Horas" min="1" max="10"
+                                    class="form-control extra-input" placeholder="Horas" min="1" max="10" step="1"
                                     value="{{missedhours}}" {{#locked}}readonly{{/locked}}>
                                 <textarea name="extrainfo[{{id}}][{{fulldate}}]" class="form-control extra-input"
                                     placeholder="Observaciones" style="width: 100%; height: 40px;"
@@ -157,15 +169,12 @@ Example context (json):
                         </td>
 
                         {{/week}}
-
-
-
                     </tr>
                     {{/students}}
+                </tbody>
             </table>
-            <tbody>
-
         </div>
+
         {{^close}}
         <input type="hidden" name="close" value="1">
 
@@ -187,16 +196,12 @@ Example context (json):
             <div class="container">
                 {{#listpages}}
                 {{#current}}
-                <button type="button" class="btn btn-secondary"
-                    onclick="location.href='/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{page}}&weeks={{weeks}}'"
-                    disabled>{{currentpage}}</button>
+                <button type="button" class="btn btn-secondary" disabled>{{page}}</button>
                 {{/current}}
                 {{^current}}
-
-                <button type="button" class="btn btn-primary"
-                    onclick="location.href='/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{page}}weeks={{weeks}}'"
-                    {{active}}>{{page}}</button>
-
+                <button type="button" class="btn btn-primary pagelink" data-url="/{{dirroot}}/local/asistencia/previous_attendance.php?courseid={{courseid}}&page={{page}}{{#search}}&search={{search}}{{/search}}">
+                    {{page}}
+                </button>
                 {{/current}}
                 {{/listpages}}
             </div>
@@ -205,25 +210,22 @@ Example context (json):
         <div class="modal fade" id="modal1" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
-
                     <div class="modal-header">
                         <h5 class="modal-title" id="modalLabel">¿Estás seguro de que deseas cerrar la asistencia?</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-
                     <div class="modal-body">
                         Al cerrar la asistencia no se podrá modificar los valores diligenciados.
                     </div>
-
                     <div class="modal-footer">
-                        <button id="confirmAtt" type="button" class="btn  btn-primary">Confirmar</button>
+                        <button id="confirmAtt" type="button" class="btn btn-primary">Confirmar</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                     </div>
-
                 </div>
             </div>
         </div>
-
+    </div>
 </form>
+</div>

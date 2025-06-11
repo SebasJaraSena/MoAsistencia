@@ -31,7 +31,6 @@ class fetch_students
 
     public static function fetch_students($contextid, $courseid, $roleid, $offset, $limit, $conditions = '')
     {
-
         global $DB;
 
         $students_cant = $DB->count_records('enrol', ['enrol' => 'manual', 'courseid' => $courseid]);
@@ -55,19 +54,20 @@ class fetch_students
         // Building the string to query the users info
         $querystring = self::user_query_string($studentsids) ?? '';
 
-
         // Fetch the users main info
-        $query = empty($conditions) ? 'SELECT id, username, lastname, firstname,  email  FROM {user} WHERE id IN (' . $querystring . ') ORDER BY lastname ASC OFFSET ' . ($offset * $limit) . ' LIMIT ' . $limit : 'SELECT id, username, lastname, firstname,  email  FROM {user} WHERE id IN (' . $querystring . ') ' . $conditions . ' ORDER BY lastname ASC ';
+        $query = empty($conditions) 
+            ? 'SELECT id, username, lastname, firstname, email FROM {user} WHERE id IN (' . $querystring . ') ORDER BY lastname ASC OFFSET ' . ($offset * $limit) . ' LIMIT ' . $limit 
+            : 'SELECT id, username, lastname, firstname, email FROM {user} WHERE id IN (' . $querystring . ') ' . $conditions . ' ORDER BY lastname ASC';
+
         // Se trae la información de los aprendices
         $studentsinfo = !empty($querystring) ? $DB->get_records_sql($query) : [];
-
 
         // Student info format
         $students_data = [];
         // Format the student data
-        foreach ($studentsinfo as $studentinfo) { // Ciclo para formatear la información para que sea legible
+        foreach ($studentsinfo as $studentinfo) {
             $id = $studentinfo->id;
-            $filtered_array = array_values(array_filter($enrollmentscopy, function ($item) use ($id) { // Se filtra la información de los usuarios que están matriculados como aprendices
+            $filtered_array = array_values(array_filter($enrollmentscopy, function ($item) use ($id) {
                 return $item['userid'] == $id;
             }));
 
@@ -82,8 +82,12 @@ class fetch_students
             $students_data[] = $student_data;
         }
 
-        // Retun the students data formatted
-        return ['students_data' => $students_data, 'pages' => empty($conditions) ? (int) ceil(count($studentsids) / $limit) : 0, 'studentsamount' => count($studentsids)];
+        // Return the students data formatted
+        return [
+            'students_data' => $students_data, 
+            'pages' => empty($conditions) ? (int) ceil(count($studentsids) / $limit) : ceil(count($students_data) / $limit), 
+            'studentsamount' => count($studentsids)
+        ];
     }
 
     // Function to fetch all the enrollments related with enrolid
