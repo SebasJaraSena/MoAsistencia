@@ -21,11 +21,12 @@
  * @author     Equipo zajuna
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+// Importar las clases necesarias
 use block_rss_client\output\item;
 use core\plugininfo\local;
 use core_calendar\local\event\forms\create;
 
+// Importar las clases necesarias
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/form/edit.php');
 require_once(__DIR__ . '/externallib.php');
@@ -36,8 +37,10 @@ require_login();
 $courseid = required_param('courseid', PARAM_INT);
 $pageurl = optional_param('page', 1, PARAM_INT);
 $search = optional_param('search', '', PARAM_RAW);
+$startdate = $_GET['startdate'] ?? '';
+$enddate = $_GET['enddate'] ?? '';
 
-$course   = get_course($courseid);
+$course = get_course($courseid);
 require_login($course);
 $context = context_course::instance($courseid);
 $params = [
@@ -62,7 +65,7 @@ local_asistencia_build_breadcrumbs($courseid, 'logs_descarga');
 
 //  Título y heading
 $PAGE->set_title('Logs de descargas');
-$PAGE->set_heading(get_course($courseid)->shortname);
+$PAGE->set_heading(get_course($courseid)->fullname);
 
 //  JS y CSS
 $PAGE->requires->js_call_amd('local_asistencia/attendance_views', 'init');
@@ -73,51 +76,77 @@ $dbname = $DB->get_record('local_asistencia_config', ['name' => 'dbname'])->valu
 try {
 
     // Se consultan todos los registros en la tabla local_asistencia_logs
-    $activities = local_asistencia_external::fetch_activities_report();
+    $activities = local_asistencia_external::fetch_activities_report($courseid);
 
     // 🔍 Aplicar filtro si se usa el buscador
     if (!empty($search)) {
-    // Función para normalizar tildes y espacios
-    function normalize_for_search($text) {
-        $text = mb_strtolower($text, 'UTF-8');
-        $text = str_replace(
-            ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ'],
-            ['a', 'e', 'i', 'o', 'u', 'u', 'n'],
-            $text
-        );
-        $text = preg_replace('/\s+/', ' ', $text);
-        return trim($text);
-    }
-
-    $normalizedSearch = normalize_for_search($search);
-
-    $activities = array_filter($activities, function ($activity) use ($normalizedSearch) {
-        if (is_object($activity)) {
-            $activity = (array) $activity;
+        // Función para normalizar tildes y espacios
+        function normalize_for_search($text)
+        {
+            $text = mb_strtolower($text, 'UTF-8');
+            $text = str_replace(
+                ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ'],
+                ['a', 'e', 'i', 'o', 'u', 'u', 'n'],
+                $text
+            );
+            $text = preg_replace('/\s+/', ' ', $text);
+            return trim($text);
         }
 
-        $fulltext = implode(' ', array_map(function ($value) {
-            return is_scalar($value) ? $value : '';
-        }, $activity));
+        $normalizedSearch = normalize_for_search($search);
+        // Filtrar las actividades según el texto de búsqueda
+        $activities = array_filter($activities, function ($activity) use ($normalizedSearch) {
+            if (is_object($activity)) {
+                $activity = (array) $activity;
+            }
+            // Obtener el texto completo de la actividad
+            $fulltext = implode(' ', array_map(function ($value) {
+                return is_scalar($value) ? $value : '';
+            }, $activity));
+            // Normalizar el texto completo de la actividad
+            $normalized = normalize_for_search($fulltext);
+            // Validar si el texto normalizado contiene el texto de búsqueda
+            return strpos($normalized, $normalizedSearch) !== false;
+        });
+    }
 
-        $normalized = normalize_for_search($fulltext);
+    // 🔍 Aplicar filtro por rango de fechas si se han enviado
+    if (!empty($startdate) || !empty($enddate)) {
+        $activities = array_filter($activities, function ($activity) use ($startdate, $enddate) {
+            if (is_object($activity)) {
+                $activity = (array) $activity;
+            }
 
-        return strpos($normalized, $normalizedSearch) !== false;
-    });
-}
+            $logdate = strtotime($activity['date']);
+            $from = !empty($startdate) ? strtotime($startdate . ' 00:00:00') : null;
+            $to = !empty($enddate) ? strtotime($enddate . ' 23:59:59') : null;
+
+            if ($from && $to) {
+                return $logdate >= $from && $logdate <= $to;
+            } elseif ($from) {
+                return $logdate >= $from;
+            } elseif ($to) {
+                return $logdate <= $to;
+            }
+            return true;
+        });
+    }
 
 
+    // Crear el formulario de edición
     $form = new edit();
     $numpages = (int) ceil(count($activities) / 10);
 
+    // Obtener el curso
     $course = get_course($courseid);
     $shortname = $course->shortname;
-    
+
+    // Generar el contexto para el template
     echo $OUTPUT->header();
     $currentpage = (int) $pageurl;
     $numpages = (int) ceil(count($activities) / 10);
     $pages = [];
-
+    // Generar las páginas
     for ($page = 1; $page <= $numpages; $page++) {
         if (
             $page == 1 ||
@@ -141,19 +170,24 @@ try {
             ];
         }
     }
-
+    // Generar el contexto para el template
     $templatecontext = (object) [
         'activities' => array_slice($activities, ($pageurl - 1) * 10, 10),
         'pages' => array_values($pages) ?? [],
         'dirroot' => $dircomplement[1],
         'courseid' => $courseid,
-        'search' => $search
-    ];
-    echo $OUTPUT->render_from_template('local_asistencia/activities', $templatecontext);
+        'search' => $search,
+        'startdate' => $startdate,
+        'enddate' => $enddate
 
+    ];
+    // Renderizar el template
+    echo $OUTPUT->render_from_template('local_asistencia/activities', $templatecontext);
+    // Cerrar el footer
     echo $OUTPUT->footer();
 } catch (\Throwable $th) {
     try {
+        // Insertar el error en la tabla local_asistencia_logs
         $toinsert = new stdClass;
         $toinsert->code = "57";
         $toinsert->message = "No se pudo traer información de la base de datos externa $dbname.";
@@ -163,17 +197,20 @@ try {
     } catch (\Throwable $th) {
         //throw $th;
     }
+    // Obtener los administradores del sitio
     $adminsarray = explode(",", $DB->get_record("config", ["name" => "siteadmins"])->value);
-
+    // Generar el contexto para el template
     $templatecontext = (object) [
         'courseid' => $data['courseid'],
         'config' => in_array($data['userid'], $adminsarray) ? 1 : 0,
         'dirroot' => $dircomplement[array_key_last($dircomplement)],
     ];
+    // Renderizar el template
     echo $OUTPUT->header();
     echo $OUTPUT->render_from_template('local_asistencia/error', $templatecontext);
+    // Lanzar el error
     throw new \moodle_exception('dbconnectionerror', 'local_asistencia', '', $e->getMessage());
-
+    // Cerrar el footer
     echo $OUTPUT->footer();
 }
 

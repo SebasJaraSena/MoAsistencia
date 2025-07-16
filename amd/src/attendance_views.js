@@ -1,113 +1,127 @@
-// This file is part of Moodle - http://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
-/**
- * Events for the grading interface.
- * @module     local_asistencia/attendance_views
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright  2025 Zajuna team 
- **/
-
-
 define(['jquery'], function ($) {
-    function tableStickyColumns(percent) {
+    let headerCells, rows;
+    // Función para inicializar el cache de la tabla
+    function initCache() {
         const table = document.getElementById('attendance-table');
         if (!table) return;
-
-        const isSmallScreen = window.innerWidth <= 768;
         const headerRow = table.querySelector('thead tr');
-        const headerCells = Array.from(headerRow.children);
-        const rows = Array.from(table.querySelectorAll('tbody tr'));
+        headerCells = Array.from(headerRow.children);
+        rows = Array.from(table.querySelectorAll('tbody tr'));
+    }
+    // Función para normalizar el texto
+    function normalizeText(text) {
+        return text
+            .trim()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+    }
+    // Función para debounce
+    function debounce(fn, wait = 100) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(this, args), wait);
+        };
+    }
+    // Función para hacer las columnas de la tabla sticky
+    function tableStickyColumns() {
+        const table = document.getElementById('attendance-table');
+        if (!table || !headerCells || !rows) return;
 
-        // Paso 1: calcular los "left" de cada columna sticky
-        let leftOffsets = [];
-        let accumulatedLeft = 0;
-
-        headerCells.forEach((th, index) => {
-            if (!th.classList.contains('sticky-column')) {
-                leftOffsets.push(null);
-                return;
+        // Threshold para pantalla pequeña: solo la primera columna sticky
+        const isSmall = window.innerWidth <= 1024;
+        let accumulated = 0;
+        const leftOffsets = headerCells.map((th, i) => {
+            if (!th.classList.contains('sticky-column') || (isSmall && i > 0)) {
+                return null;
             }
-
-            if (isSmallScreen && index > 0) {
-                leftOffsets.push(null);
-                return;
-            }
-
             const width = th.getBoundingClientRect().width || 150;
-            leftOffsets.push(accumulatedLeft);
-            accumulatedLeft += width;
+            const left = accumulated;
+            accumulated += width;
+            return left;
         });
 
-        // Paso 2: aplicar a los TH
-        headerCells.forEach((th, index) => {
-            if (!th.classList.contains('sticky-column')) return;
+        // Columnas que deben tener fondo gris siempre
+        const greyCols = [0, 1, 2, 3, 4, 5];  // incluye Documento, Tipo, Apellidos, Nombres, Correo y Estado
 
-            if (leftOffsets[index] === null) {
+        // Aplica a TH
+        headerCells.forEach((th, i) => {
+            if (leftOffsets[i] == null) {
                 th.style.position = 'static';
                 th.style.left = '';
                 th.style.zIndex = '';
             } else {
                 th.style.position = 'sticky';
-                th.style.left = `${leftOffsets[index]}px`;
+                th.style.left = `${leftOffsets[i]}px`;
                 th.style.zIndex = 2;
-                th.style.backgroundColor = '#f1f1f1';
                 th.style.fontSize = '14px';
+            }
+            // Fondo gris solo en columnas tipo, apellidos, nombres, correo, estado
+            if (greyCols.includes(i)) {
+                th.style.backgroundColor = '#f1f1f1';
+            } else {
+                th.style.backgroundColor = '';
             }
         });
 
-        // Paso 3: aplicar a los TD por fila
+        // Aplica a TD
         rows.forEach(row => {
             const cells = Array.from(row.children);
-            cells.forEach((td, index) => {
-                if (!td.classList.contains('sticky-column')) return;
-
-                const text = td.innerText.trim();
-
-                if (leftOffsets[index] === null) {
+            cells.forEach((td, i) => {
+                if (leftOffsets[i] == null) {
                     td.style.position = 'static';
                     td.style.left = '';
                     td.style.zIndex = '';
                 } else {
                     td.style.position = 'sticky';
-                    td.style.left = `${leftOffsets[index]}px`;
+                    td.style.left = `${leftOffsets[i]}px`;
                     td.style.zIndex = 1;
                 }
-
-                // Color de fondo por estado
-                if (text === 'SUSPENDIDO') {
-                    td.style.backgroundColor = '#fcefdc';
-                } else if (text === 'ACTIVO') {
-                    td.style.backgroundColor = '#def1de';
-                } else {
+                // Fondo gris solo en columnas tipo, apellidos, nombres, correo, estado
+                if (greyCols.includes(i)) {
                     td.style.backgroundColor = '#f1f1f1';
+                } else {
+                    td.style.backgroundColor = '';
+                }
+
+                // Override fondo en columna Estado (índice 5)
+                if (i === 5) {
+                    const text = td.innerText.trim();
+                    td.style.backgroundColor =
+                        text === 'SUSPENDIDO' ? '#fcefdc'
+                        : text === 'ACTIVO'     ? '#def1de'
+                        : '#f1f1f1';
                 }
             });
         });
-        // Paso 4: ajustar el ancho mínimo de la tabla si hay pocas columnas
-        const visibleHeaderCells = headerCells.filter(cell => cell.offsetParent !== null); // solo visibles
-        if (visibleHeaderCells.length <= 7) {
-            table.style.minWidth = '100%';
+
+        // Ajuste de ancho
+        const visibleCount = headerCells.filter(th => th.offsetParent !== null).length;
+        if (visibleCount <= 7) {
             table.style.width = '100%';
+            table.style.minWidth = '100%';
         } else {
-            table.style.minWidth = 'auto';
-            table.style.width = 'auto';
+            table.style.width = '';
+            table.style.minWidth = '';
         }
-
     }
+    // Función para habilitar la búsqueda con actualización de columnas sticky
+    function enableSearchWithStickyUpdate() {
+        const searchInput = document.getElementById('searchInput');
+        if (!searchInput) return;
 
+        const doFilter = () => {
+            const filter = normalizeText(searchInput.value);
+            rows.forEach(row => {
+                row.style.display = normalizeText(row.innerText).includes(filter) ? '' : 'none';
+            });
+            tableStickyColumns();
+        };
+
+        searchInput.addEventListener('input', debounce(doFilter));
+    }
+    // Función para esperar a que el elemento exista
     function waitForElement(selector, callback) {
         const interval = setInterval(() => {
             if (document.querySelector(selector)) {
@@ -116,59 +130,24 @@ define(['jquery'], function ($) {
             }
         }, 100);
     }
-
-  function enableSearchWithStickyUpdate(percent) {
-    const searchInput = document.getElementById('searchInput');
-    if (!searchInput) return;
-
-    searchInput.addEventListener('keyup', function () {
-        const filter = normalizeText(searchInput.value);
-
-        const table = document.getElementById('attendance-table');
-        if (!table) return;
-
-        const rows = table.querySelectorAll('tbody tr');
-
-        rows.forEach(row => {
-            const text = normalizeText(row.innerText);
-            row.style.display = text.includes(filter) ? '' : 'none';
-        });
-
-        tableStickyColumns(percent);
-    });
-
-    // Función mejorada para normalizar texto
-    function normalizeText(text) {
-        return text
-            .trim()                            
-            .normalize("NFD")                  
-            .replace(/[\u0300-\u036f]/g, "")  
-            .toLowerCase();                   
-    }
-}
-
-
-
+    // Función para inicializar el módulo   
     return {
         init: function () {
             waitForElement('#attendance-table', function () {
-                const percent = window.innerWidth > 768 ? 1 : 0.2;
-                tableStickyColumns(percent);
-                enableSearchWithStickyUpdate(percent);
+                initCache();
+                tableStickyColumns();
+                enableSearchWithStickyUpdate();
 
-                // Reaplicar sticky al redimensionar ventana
                 window.addEventListener('resize', function () {
                     const mainbox = document.getElementById('region-main-box');
                     if (mainbox) {
                         mainbox.style.setProperty('flex', '0 0 100%', 'important');
                         mainbox.style.setProperty('max-width', '100%', 'important');
                     }
-
-                    const newPercent = window.innerWidth > 768 ? 1 : 0.2;
-                    tableStickyColumns(newPercent);
+                    tableStickyColumns();
                 });
             });
         },
-        refreshSticky: tableStickyColumns 
+        refreshSticky: tableStickyColumns
     };
 });

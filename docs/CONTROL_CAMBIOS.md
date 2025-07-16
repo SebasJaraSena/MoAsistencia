@@ -124,6 +124,32 @@ Cada cambio registrado incluye:
   - Validación de sistema de navegación
 - **Estado**: Completado
 
+### Cambio #008
+- **ID**: CHG-008
+- **Fecha**: 07/06/2024
+- **Descripción**: 
+  - Mejoras en el frontend, incluyendo la miga de pan adaptada a la plataforma Zajuna.
+  - Implementación de paginación en los listados de asistencia y asistencia anterior.
+  - El módulo de actividades fue reemplazado por logs de descarga, con opción de búsqueda y descarga de reportes según criterios.
+  - Mejoras en la descarga de reportes Excel en el historial: ahora el nombre del archivo incluye la fecha de descarga en vez de un rango.
+  - Actualización de nomenclatura:
+    - "no asistió" → "INCUMPLIMIENTO_INJUSTIFICADO"
+    - "llegó tarde" → "INASISTENCIA_NO_PROGRAMADA"
+    - "excusa médica" → "INASISTENCIA_PROGRAMADA"
+  - Correcciones ortográficas generales.
+- **Componentes Afectados**:
+  - Archivos JS de frontend (`amd/src/attendance_views.js`, `amd/src/attendance_observations.js`)
+  - Plantillas Mustache (`templates/activities.mustache`, `templates/history.mustache`, `templates/previous_attendance.mustache`, `templates/studentslist.mustache`)
+  - Archivos PHP relacionados con asistencia y reportes (`attendance.php`, `previous_attendance.php`, `download_history.php`, `downloader.php`, `detailed_report_downloader.php`, `classes/util/report_downloader.php`)
+  - Archivos de idioma (`lang/en/local_asistencia.php`, `lang/es/local_asistencia.php`)
+- **Impacto**: Alto
+- **Validación**:
+  - Pruebas de navegación y visualización en el frontend.
+  - Verificación de paginación y búsqueda en listados.
+  - Pruebas de descarga de reportes Excel y validación de nombres de archivo.
+  - Revisión de nomenclatura y ortografía en la interfaz y reportes.
+- **Estado**: Completado
+
 ## Matriz de Impacto de Cambios
 
 | ID | Componente | Rendimiento | Usabilidad | Seguridad | Integridad |
@@ -135,6 +161,7 @@ Cada cambio registrado incluye:
 | CHG-005 | DB externa y actividades | ✓ | ✓ | ✓✓ | ✓✓ |
 | CHG-006 | Validación formularios | - | ✓ | ✓✓✓ | ✓✓ |
 | CHG-007 | JavaScript UI y navegación | ✓ | ✓✓✓ | - | ✓ |
+| CHG-008 | Mejoras front, paginación, logs, nomenclatura | ✓✓ | ✓✓✓ | - | ✓✓ |
 
 *Nota: ✓=Impacto bajo, ✓✓=Impacto medio, ✓✓✓=Impacto alto*
 

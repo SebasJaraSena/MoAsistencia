@@ -25,7 +25,7 @@ Example context (json):
 }
 }}
 
-
+{{! Boton menu }}
 <div class="d-flex justify-content-start ml-4 my-2">
     <div class="position-relative d-inline-block"
         onclick="location.href='/{{dirroot}}/local/asistencia/index.php?courseid={{courseid}}'"
@@ -42,17 +42,23 @@ Example context (json):
 <div class="container ">
 
     <br>
-<form method="get" action="/{{dirroot}}/local/asistencia/attendance.php" class="d-flex align-items-center mb-3" style="gap: 10px;">
-    <input type="hidden" name="courseid" value="{{courseid}}">
-    <input type="hidden" name="limit" value="25">
-    <input type="hidden" name="page" value="1">
-    <input type="text" name="search" class="form-control" value="{{search}}" placeholder="Buscar por documento, apellidos, nombres o correo">
-    <button type="submit" class="btn btn-primary">Buscar</button>
-    {{#search}}
-    <a href="/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page=1" class="btn btn-secondary">
-    Limpiar</a>
-    {{/search}}
-</form>
+    <div class="my-2">
+    {{! Formulario para busqueda }}
+    <form method="get" action="/{{dirroot}}/local/asistencia/attendance.php" class="d-flex align-items-center mb-3"
+        style="gap: 10px;">
+        <input type="hidden" name="courseid" value="{{courseid}}">
+        <input type="hidden" name="limit" value="25">
+        <input type="hidden" name="page" value="1">
+        <input type="text" name="search" class="form-control" value="{{search}}"
+            placeholder="Buscar por documento, apellidos, nombres o correo">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        {{#search}}
+        <a href="/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page=1" class="btn btn-secondary">
+            Limpiar</a>
+        {{/search}}
+    </form>
+    </div>
+    {{! Formulario de las asistencias}}
     <form action="./attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}" method="POST"
         id="course_{{courseid}}">
         {{#weekheader}}
@@ -60,7 +66,7 @@ Example context (json):
         {{/weekheader}}
         <div class="container">
 
-         
+
             <div class="fortable" id="table-attendance">
 
 
@@ -72,9 +78,10 @@ Example context (json):
                 <table class="table table-hover table-container" id="attendance-table">
                     <thead>
                         <tr>
+                            <th class="sticky-column">TIPO</th>
                             <th class="sticky-column">DOCUMENTO</th>
-                            <th class="sticky-column">APELLIDOS</th>
                             <th class="sticky-column">NOMBRES</th>
+                            <th class="sticky-column">APELLIDOS</th>
                             <th class="sticky-column">CORREO</th>
                             <th class="sticky-column">ESTADO</th>
                             {{#weekheader}}
@@ -85,13 +92,14 @@ Example context (json):
                     <tbody>
                         {{#students}}
                         <tr>
+                            <td class="sticky-column">{{tipo}}</td>
                             <td class="sticky-column">{{username}}</td>
+                            <td class="sticky-column">{{firstname}}</td>
                             <td class="sticky-column">
                                 {{lastname}}
                                 <input type="hidden" id="userid_{{id}}" name="userids[]" value="{{id}}">
                                 <input type="hidden" id="statususerid_{{id}}" name="statususerids[]" value="{{status}}">
                             </td>
-                            <td class="sticky-column">{{firstname}}</td>
                             <td class="sticky-column">{{email}}</td>
                             <td
                                 class="sticky-column {{#status}}alert alert-warning{{/status}}{{^status}}alert alert-success{{/status}}">
@@ -192,16 +200,24 @@ Example context (json):
                 <br>
                 <div class="container">
                     {{#listpages}}
-                    {{#current}}
-                    <button type="button" class="btn btn-secondary" disabled>{{page}}</button>
-                    {{/current}}
-                    {{^current}}
-                    <button type="button" class="btn btn-primary pagelink"
-                        data-url="/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page={{page}}">
-                        {{page}}
-                    </button>
-                    {{/current}}
-                    {{/listpages}}
+    {{#current}}
+        <button type="button" class="btn btn-secondary" disabled>{{page}}</button>
+    {{/current}}
+
+    {{^current}}
+        {{#active}}
+            <button type="button" class="btn btn-light" disabled>{{page}}</button>
+        {{/active}}
+
+        {{^active}}
+            <button type="button" class="btn btn-primary pagelink"
+                data-url="/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page={{page}}">
+                {{page}}
+            </button>
+        {{/active}}
+    {{/current}}
+{{/listpages}}
+
                 </div>
             </div>
 

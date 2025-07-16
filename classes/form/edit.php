@@ -21,11 +21,11 @@
  * @copyright Equipo zajuna
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+    
 require_once("$CFG->libdir/formslib.php");
-
+//clase editor
 class edit extends moodleform{
-
+    //definicion del formulario
     public function definition(){
         global $USER, $DB;
         // Clean $_GET parameters by removing "amp;"
@@ -69,10 +69,10 @@ class edit extends moodleform{
         }
         
     }
-    
+    //filtros
     public function filters($courseid){
         $mform = $this->_form;
-        
+        //filtros
         $mform->addElement('select', 'filters', 'Filtros:' , array('Nombre', 'Apellido', 'Correo', 'Documento'));
         $mform->setType('filters', PARAM_INT);
         $mform->addElement('text', 'filterValue', '');
@@ -80,7 +80,7 @@ class edit extends moodleform{
         
         $this->add_action_buttons(true,'Filtrar Usuarios');
     }
-    
+    //configuracion de la base de datos para la conexion a la base de datos de la aplicacion    
     public function dbConfiguration(){
         global $DB;
         
@@ -103,7 +103,7 @@ class edit extends moodleform{
         $this->add_action_buttons(false);
     }
 
-    // Custom validation should be added here.
+    // Se debe agregar aquí una validación personalizada.
     function validation($data, $files) {
         return [];
     }

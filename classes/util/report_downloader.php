@@ -28,25 +28,28 @@ require_once($GLOBALS['CFG']->libdir . '/excellib.class.php');
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
+//clase report_donwloader
 class report_donwloader
 {
+    //funcion para generar el reporte de asistencia
     public static function attendance_report($result, $initialdate, $finaldate, $shortname)
     {
         global $DB, $USER;
         session_write_close();
 
-
+        //generar el nombre del archivo
         $downloadDate = date('Y-m-d_H-i-s');
         $filename = 'reporte_asistencia_' . $shortname . '_' . $downloadDate . '.xlsx';
 
-        // Filtrar estudiantes con asistencia
+        //filtrar estudiantes con asistencia
         $attendanceFound = array_filter($result, function ($row) {
             return isset($row['day0']);
         });
 
+        //si hay estudiantes con asistencia
         if (!empty($attendanceFound)) {
 
-            // 1. Recoger todas las fechas únicas
+            //1. Recoger todas las fechas únicas
             $dateSet = [];
             foreach ($result as $row) {
                 foreach ($row as $key => $value) {
@@ -61,21 +64,21 @@ class report_donwloader
             sort($dates);
 
             // 3. Cabeceras 
-            $fixedHeaders = ['username', 'firstname', 'lastname', 'email', 'idtype', 'status'];
+            $fixedHeaders = ['idtype', 'username_clean', 'firstname', 'lastname', 'email', 'status'];
             $headers = array_map(function ($header) {
                 switch ($header) {
-                    case 'username':
-                        return 'Número de documento';
+                    case 'idtype':
+                        return 'Tipo';
+                    case 'username_clean':
+                        return 'Documento';
                     case 'firstname':
                         return 'Nombres';
                     case 'lastname':
                         return 'Apellidos';
                     case 'email':
-                        return 'Correo electrónico';
-                    case 'idtype':
-                        return 'Tipo de identificación';
+                        return 'Correo';
                     case 'status':
-                        return 'Estado del Aprendiz';
+                        return 'Estado';
                     default:
                         return $header;
                 }
@@ -121,16 +124,15 @@ class report_donwloader
                     $obs = trim($row["observation$i"] ?? '');
                     $teacher = trim($row["teacher$i"] ?? '');
 
+                    $dayState[$date][] = $state;
+                    $dayTime[$date][] = $time;
+                    $dayObservation[$date][] = $obs !== '' ? $obs : 'Sin observación';
+                    $dayTeacher[$date][] = $teacher;
+
                     if ($state !== '' || $time !== '') {
                         $hasAttendance = true;
                     }
 
-                    $dayState[$date][] = $state;
-                    $dayTime[$date][] = $time;
-                    if ($obs !== '') {
-                        $dayObservation[$date][] = $obs;
-                    }
-                    $dayTeacher[$date][] = $teacher;
                     $i++;
                 }
 
@@ -198,11 +200,12 @@ class report_donwloader
                 $sortedData[] = $finalRow;
             }
 
-            // 5. Crear y guardar Excel
+            // 5. Crear y guardar Excel en el servidor
             $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
             $sheet->setTitle('Reporte');
 
+            //generar el nombre del instructor
             $instructor = fullname($USER);
             $sheet->setCellValue('A1', "Curso: $shortname");
             $sheet->setCellValue('B1', "Fecha: $initialdate a $finaldate");
@@ -213,16 +216,19 @@ class report_donwloader
             $sheet->getStyle("A2:{$lastColumn}2")->getFont()->setBold(true);
             $sheet->fromArray($sortedData, NULL, 'A3');
 
+            //generar el archivo temporal
             $tmp = sys_get_temp_dir() . "/$filename";
+            //generar el escritor   
             $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
             $writer->save($tmp);
 
+            //generar los encabezados
             header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
             header("Content-Disposition: attachment; filename=\"$filename\"");
             header('Content-Length: ' . filesize($tmp));
             readfile($tmp);
             unlink($tmp);
-            exit;
+            
             // Log
             try {
                 $toinsert = new stdClass;
@@ -234,6 +240,7 @@ class report_donwloader
             } catch (\Throwable $th) {
                 // Silenciar errores
             }
+            exit;
         } else {
             \core\notification::add("No hay información de asistencia.", \core\output\notification::NOTIFY_ERROR);
             try {

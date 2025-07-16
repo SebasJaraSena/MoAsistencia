@@ -21,25 +21,22 @@
  * @author     Equipo zajuna
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+// Obtener el contexto del sistema
 use block_rss_client\output\item;
 use core\plugininfo\local;
-
 use function PHPSTORM_META\type;
-
+// Obtener el contexto del sistema
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/externallib.php');
 require_once($CFG->dirroot . '/local/asistencia/lib.php');
-
+// Obtener el contexto del sistema
 require_login();
 global $CFG, $USER, $DB, $SESSION;
-
-// 👇 Primero obtenemos lo esencial del POST (no usaremos $_GET todavía)
+// Obtenemos lo esencial del POST
 $rcourseid = $_POST['courseid'] ?? null;
 $attendancepage = isset($_POST['page']) ? (int) trim($_POST['page']) : 1;
 
-
-// 🔁 Validar si es un POST y procesar antes de cualquier salida
+// Validar si es un POST y procesar antes de cualquier salida
 if (
     $_SERVER["REQUEST_METHOD"] === "POST" &&
     isset($_POST['attendance'], $_POST['extrainfo'], $_POST['extrainfoNum'], $_POST['courseid'], $_POST['teacherid'])
@@ -48,22 +45,22 @@ if (
     $infos = $_POST['extrainfo'];
     $hours = $_POST['extrainfoNum'];
     $teacherid = $_POST['teacherid'];
-
+    // Obtener el contexto del sistema
     foreach ($attendances as $studentid => $days) {
         foreach ($days as $date => $attendance) {
             if ($attendance == "-8") {
                 continue;
             }
-
+            // Obtener el contexto del sistema
             $observations = $infos[$studentid][$date] ?? '';
             $amountHours = $hours[$studentid][$date] ?? 0;
-
+            // Obtener el contexto del sistema
             $existing = $DB->get_records('local_asistencia', [
                 'courseid' => $rcourseid,
                 'studentid' => $studentid,
                 'teacherid' => $teacherid
             ]);
-
+            // Obtener el contexto del sistema
             $record = null;
             foreach ($existing as $rec) {
                 if ($rec->date === $date) {
@@ -71,7 +68,7 @@ if (
                     break;
                 }
             }
-
+            // Obtener el contexto del sistema
             if ($record) {
                 $record->attendance = $attendance;
                 $record->observations = $observations;
@@ -90,11 +87,11 @@ if (
             }
         }
     }
-
+    // Obtener el contexto del sistema
     // Guardar permanentemente agrupado por estudiante
     $asistencia = $DB->get_records('local_asistencia', ['courseid' => $rcourseid]);
     $por_estudiante = [];
-
+    // Obtener el contexto del sistema
     foreach ($asistencia as $asis) {
         $key = $asis->date . '_' . $asis->teacherid;
         $por_estudiante[$asis->studentid][$key] = [
@@ -105,17 +102,21 @@ if (
             'AMOUNTHOURS' => $asis->amounthours
         ];
     }
-
+    // Obtener el contexto del sistema  
     foreach ($por_estudiante as $studentid => $records) {
         $result = $DB->get_record('local_asistencia_permanente', [
             'course_id' => $rcourseid,
             'student_id' => $studentid
         ]);
-
+        // Validar si existe el resultado
         if ($result) {
+            // Obtener el historial
             $historial = json_decode($result->full_attendance, true);
+            // Recorrer los registros
             foreach ($records as $newRecord) {
+                // Validar si existe el registro
                 $existe = false;
+                // Recorrer el historial
                 foreach ($historial as &$item) {
                     if ($item['DATE'] === $newRecord['DATE'] && $item['TEACHER_ID'] === $newRecord['TEACHER_ID']) {
                         $item = $newRecord;
@@ -123,6 +124,7 @@ if (
                         break;
                     }
                 }
+                // Validar si no existe el registro
                 if (!$existe) {
                     $historial[] = $newRecord;
                 }
@@ -130,6 +132,7 @@ if (
             $result->full_attendance = json_encode($historial);
             $DB->update_record('local_asistencia_permanente', $result);
         } else {
+            // Crear un nuevo registro
             $nuevo = new stdClass();
             $nuevo->course_id = $rcourseid;
             $nuevo->student_id = $studentid;
@@ -142,20 +145,19 @@ if (
         $cache = cache::make('local_asistencia', 'coursestudentslist');
         $cache->set("H_$rcourseid", json_encode($updated_attendance));
     }
-
+    // Eliminar los registros de la asistencia
     $DB->delete_records('local_asistencia', ['courseid' => $rcourseid]);
-
     // 🔁 Redirigir limpiamente antes de cualquier salida
     $url = new moodle_url('/local/asistencia/attendance.php', [
         'courseid' => $rcourseid,
         'range' => 0,
         'page' => $attendancepage
     ]);
-
-    redirect($url, "Guardando asistencia, redireccionando...", null, \core\output\notification::NOTIFY_SUCCESS);
+    // Redirigir
+    redirect($url, "Asistencia guardada...", null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
-// Creacion de cache
+// Creación de cache
 $cache = cache::make('local_asistencia', 'coursestudentslist');
 $userid = $USER->id;
 $courseid = $_GET['courseid'];
@@ -165,8 +167,8 @@ $search = trim($_GET['search'] ?? '');
 
 $date = new DateTime(date('Y-m-d'));
 $startweek = clone $date;
+// Obtener el contexto del sistema
 $endweek = clone $date;
-
 // Si hoy es lunes, usamos la fecha actual, si no, retrocedemos al lunes
 $initial = $date->format('l') == 'Monday' ? $startweek->format("Y-m-d") : $startweek->modify("last monday")->format("Y-m-d");
 // Si hoy es domingo, usamos la fecha actual, si no, avanzamos al domingo
@@ -175,7 +177,7 @@ $final = $date->format('l') == 'Sunday' ? $endweek->format("Y-m-d") : $endweek->
 $close = local_asistencia_external::close_validation_retard($courseid, $initial, $final);
 $context = context_course::instance($courseid);
 $range = optional_param('range', 0, PARAM_INT);
-
+//variables a renderizar
 $params = [
     'courseid' => $courseid,
     'page' => $attendancepage,
@@ -187,26 +189,23 @@ $params = [
 // Parámetros y URL actual
 $currenturl = new moodle_url('/local/asistencia/attendance.php', $params);
 $dircomplement = explode("/", $currenturl->get_path());
-// 1) Establecer URL y contexto
+// Establecer URL y contexto
 $PAGE->set_url($currenturl);
 $PAGE->set_context($context);
-
+// Obtener el contexto del sistema
 local_asistencia_build_breadcrumbs($courseid, 'asistencia_general');
-// 2) Cargar el curso (¡antes de tocar el navbar!)
+// Cargar el curso (¡antes de tocar el navbar!)
 $PAGE->set_course(get_course($courseid));
-
-// 6) Título de la página
+// Título de la página
 $PAGE->set_title(get_string('asistencia_general', 'local_asistencia'));
-
-// 7) Scripts y estilos
+// Scripts y estilos
 $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
 $PAGE->requires->css(
     new moodle_url('/local/asistencia/styles/styles.css', ['v' => time()])
 );
-
-// 8) Verificar permisos
+// Verificar permisos
 require_capability('local/asistencia:vergeneral', $context);
-
+// Función para normalizar el texto
 function normalize_for_search($text)
 {
     $text = mb_strtolower($text, 'UTF-8');
@@ -218,91 +217,97 @@ function normalize_for_search($text)
     $text = preg_replace('/\s+/', ' ', $text);
     return trim($text);
 }
-
-function studentsFormatWeek($studentslist, $week, $cachehistoryattendance,
-                            $userid, $initial, $final, $a, $suspended, $close) {
+// Función para formatear la semana
+function studentsFormatWeek(
+    $studentslist,
+    $week,
+    $cachehistoryattendance,
+    $userid,
+    $initial,
+    $final,
+    $a,
+    $suspended,
+    $close
+) {
     global $DB, $courseid;
-
+    //Arreglo con los dias de la semana                            
     $weekdaysnames = [
-        'Monday'    => 0,
-        'Tuesday'   => 1,
+        'Monday' => 0,
+        'Tuesday' => 1,
         'Wednesday' => 2,
-        'Thursday'  => 3,
-        'Friday'    => 4,
-        'Saturday'  => 5,
-        'Sunday'    => 6
+        'Thursday' => 3,
+        'Friday' => 4,
+        'Saturday' => 5,
+        'Sunday' => 6
     ];
     $totaldaysattendance = 0;
-
+    // Recorrer los estudiantes
     foreach ($studentslist as $i => $student) {
         $studentid = $student['id'];
         $studentslist[$i]['week'] = $week;
-
-        // 2. Inicializar la semana con valores por defecto
+        // Inicializar la semana con valores por defecto
         for ($j = 0; $j < 7; $j++) {
             $studentslist[$i]['week'][$j]['selection'] = [
-                'op-8' => 1, 'op0' => 0, 'op1' => 0,
-                'op2'  => 0, 'op3' => 0,
+                'op-8' => 1,
+                'op0' => 0,
+                'op1' => 0,
+                'op2' => 0,
+                'op3' => 0,
             ];
             $studentslist[$i]['week'][$j]['closed'] = $close;
             $studentslist[$i]['week'][$j]['locked'] = false;
             // opcionalmente también:
-            $studentslist[$i]['week'][$j]['missedhours']   = '';
-            $studentslist[$i]['week'][$j]['observations']  = '';
+            $studentslist[$i]['week'][$j]['missedhours'] = '';
+            $studentslist[$i]['week'][$j]['observations'] = '';
         }
-
-        // 3. Obtener las asistencias ya guardadas
-        $filtered = array_filter($cachehistoryattendance,
+        // Obtener las asistencias ya guardadas
+        $filtered = array_filter(
+            $cachehistoryattendance,
             fn($item) => $item['student_id'] == $studentid
         );
         if (!empty($filtered)) {
-            $firstKey       = array_key_first($filtered);
+            $firstKey = array_key_first($filtered);
             $jsonattendance = json_decode(
-                $cachehistoryattendance[$firstKey]['full_attendance'], true
+                $cachehistoryattendance[$firstKey]['full_attendance'],
+                true
             ) ?: [];
-
-            $records = array_filter($jsonattendance, function($item)
-                use ($initial, $final, $userid) {
-                return $item['DATE']   >= $initial
-                    && $item['DATE']   <= $final
+            // Filtrar las asistencias
+            $records = array_filter($jsonattendance, function ($item) use ($initial, $final, $userid) {
+                return $item['DATE'] >= $initial
+                    && $item['DATE'] <= $final
                     && $item['TEACHER_ID'] == $userid;
             });
-
+            // Recorrer las asistencias
             foreach ($records as $record) {
-                $date    = DateTime::createFromFormat('Y-m-d', $record['DATE']);
-                $index   = $weekdaysnames[$date->format('l')];
-
-                // poner la selección correcta
-                foreach (['op-8','op0','op1','op2','op3'] as $op) {
+                $date = DateTime::createFromFormat('Y-m-d', $record['DATE']);
+                $index = $weekdaysnames[$date->format('l')];
+                // Poner la selección correcta
+                foreach (['op-8', 'op0', 'op1', 'op2', 'op3'] as $op) {
                     $studentslist[$i]['week'][$index]['selection'][$op] = 0;
                 }
                 $studentslist[$i]['week'][$index]['selection']
-                              ['op'.$record['ATTENDANCE']] = 1;
-
-                // cargar horas y observaciones
-                $studentslist[$i]['week'][$index]['missedhours']  =
-                    $record['AMOUNTHOURS']   ?? '';
+                ['op' . $record['ATTENDANCE']] = 1;
+                // Cargar horas y observaciones
+                $studentslist[$i]['week'][$index]['missedhours'] =
+                    $record['AMOUNTHOURS'] ?? '';
                 $studentslist[$i]['week'][$index]['observations'] =
-                    $record['OBERVATIONS']   ?? '';
-
-                // bloquear esa celda (modo sólo lectura)
+                    $record['OBERVATIONS'] ?? '';
+                // Bloquear esa celda (modo sólo lectura)
                 $studentslist[$i]['week'][$index]['locked'] = true;
                 $totaldaysattendance++;
             }
         }
-
-        // 4. Si el alumno está suspendido, bloquear todas las celdas
+        // Si el alumno está suspendido, bloquear todas las celdas
         if ($student['status']) {
             for ($j = 0; $j < 7; $j++) {
                 $studentslist[$i]['week'][$j]['locked'] = true;
             }
         }
     }
-
+    // Retornar los datos
     return [$studentslist, $totaldaysattendance, $a];
 }
-
-
+// Función para obtener el rango de la semana
 function getWeekRange($initial): array
 {
     $week = ['Monday' => 'L', 'Tuesday' => 'M', 'Wednesday' => 'X', 'Thursday' => 'J', 'Friday' => 'V', 'Saturday' => 'S', 'Sunday' => 'D'];
@@ -384,7 +389,7 @@ if (isset($pages_attendance_string)) {
     $students = local_asistencia_external::fetch_students($context->id, $courseid, 5, 0, 10000, '');
     $students_data = $students['students_data'];
 
-    // Aplicar búsqueda si existe
+    // Aplicar búsqueda si existe               
     if (!empty($search)) {
         $normalizedSearch = normalize_for_search($search);
         $students_data = array_filter($students_data, function ($student) use ($normalizedSearch) {
@@ -410,18 +415,22 @@ if (isset($pages_attendance_string)) {
     $supended = array_filter($paged_students, function ($item) {
         return $item['status'] == 1;
     });
-
+    // Obtener el total de páginas y los estudiantes por página
     $pages_attendance_array['pages'] = $total_pages;
     $pages_attendance_array[$attendancepage] = $paged_students;
     $studentsamount = $total_students;
 
+    // Validar si no hay estudiantes en la página actual
     if (empty($pages_attendance_array[$attendancepage])) {
         \core\notification::add("No se encontraron aprendices matriculados.", \core\output\notification::NOTIFY_WARNING);
     }
 
+    // Copiar el array de páginas y estudiantes
     $pages_attendance_array_copy = $pages_attendance_array;
     $listlimit = count($pages_attendance_array_copy[$attendancepage]);
+    // Guardar el array de páginas y estudiantes en caché
     $cache->set('attendancelist' . $courseid, json_encode($pages_attendance_array));
+    // Obtener el array de páginas y estudiantes desde caché
     $test = $cache->get('attendancelist' . $courseid);
     $studentslist = json_decode($test, true);
 }
@@ -444,19 +453,28 @@ for ($page = 1; $page <= $pages_attendance_array['pages']; $page++) {
     }
 }
 
+// Obtener el rango de la semana
 $range = isset($_GET['range']) ? $_GET['range'] : 0;
+// Obtener las fechas inicial y final de la semana
 [$initialdate, $finaldate] = [$weekRange[0]['fulldate'], $weekRange[6]['fulldate']];
+// Obtener las asistencias temporales
 $sql = "SELECT * FROM {local_asistencia} WHERE courseid = $courseid AND teacherid = $userid AND \"date\" BETWEEN '$initialdate' AND '$finaldate'";
 $temporalattendance = array_values($DB->get_records_sql($sql));
 
+// Formatear los datos de los estudiantes
 [$students, $totaldaysattendance, $a] = studentsFormatWeek($studentslist[$attendancepage] ?? $pages_attendance_array_copy[$attendancepage], $weekRange, $cachehistoryattendance, $userid, $initial, $final, $a, count($supended), $close, $courseid);
 
+// Actualizar la lista de estudiantes
 $studentslist[$attendancepage] = $students;
+// Validar si la asistencia está cerrada
 $closeattendance = $studentsamount == count($temporalattendance) ? 0 : 1;
+// Guardar la lista de estudiantes en caché
 $cache->set('attendancelist' . $courseid, json_encode($studentslist));
 
+// Obtener la lista de estudiantes desde caché
 $studentsstring = $cache->get('attendancelist' . $courseid);
 $students = json_decode($studentsstring, true);
+// Generar el contexto para el template
 $templatecontext = (object) [
     'students' => $students[$attendancepage],
     'courseid' => $courseid,

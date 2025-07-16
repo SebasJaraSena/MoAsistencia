@@ -29,8 +29,8 @@ use core_php_time_limit;
 use stored_file;
 
 defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->libdir . '/classes/dataformat.php'); // Include Moodle's PDF library
+// Incluir la libreria de Moodle para el PDF
+require_once($CFG->libdir . '/classes/dataformat.php'); 
 
 class detailed_report_donwloader extends dataformat
 {
@@ -39,14 +39,14 @@ class detailed_report_donwloader extends dataformat
         global $DB, $USER;
         $format = self::get_format_instance($dataformat);
         $title = "\n\n\n\n\nReporte detallado\n\n\n\n\n Curso:\n\n$shortname\n\n\nRango de fechas:\n\n$initialdate - $finaldate\n\n\n\n\nGenerado por el usuario:\n\n$userName\n\n\n\n\n\n\n\n\n\n";
-        // The data format export could take a while to generate.
+        // El formato de datos puede tardar un tiempo en generarse.
         core_php_time_limit::raise();
 
-        // Close the session so that the users other tabs in the same session are not blocked.
+        // Cerrar la sesión para que los usuarios no puedan acceder a otras pestañas en la misma sesión.
         \core\session\manager::write_close();
 
 
-        // If this file was requested from a form, then mark download as complete (before sending headers).
+        // Si este archivo fue solicitado desde un formulario, entonces marcar la descarga como completa (antes de enviar los encabezados).
         \core_form\util::form_download_complete();
 
         $format->set_filename($filename);
@@ -118,6 +118,7 @@ class detailed_report_donwloader extends dataformat
         }
     }
 
+    // Funcion para generar los encabezados de los dias
     private static function headersDays($array, $days)
     {
 
@@ -127,6 +128,7 @@ class detailed_report_donwloader extends dataformat
         return $array;
     }
 
+    // Funcion para generar el reporte de actividad
     public static function activityReport($filename, $userid)
     {
         global $DB;

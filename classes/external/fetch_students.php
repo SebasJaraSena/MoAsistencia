@@ -25,55 +25,74 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once("$CFG->libdir/externallib.php");
-
+// Clase para obtener el reporte de estudiantes
 class fetch_students
 {
-
+    // Función para obtener el reporte de estudiantes
     public static function fetch_students($contextid, $courseid, $roleid, $offset, $limit, $conditions = '')
     {
         global $DB;
 
         $students_cant = $DB->count_records('enrol', ['enrol' => 'manual', 'courseid' => $courseid]);
 
-        // Check if the course exists
+        // Verificar si el curso existe
         if (!$students_cant) {
             return false;
         }
-        // Getting the id record of manual enrolment for the $courseid value
+        // Obtener el id del registro de matrícula manual para el valor de $courseid
         $enrolid = $DB->get_record('enrol', ['enrol' => 'manual', 'courseid' => $courseid], 'id');
 
-        // Getting all the records whom are realted to the enrol id
+        // Obtener todos los registros que están relacionados con el id de matrícula
         $enrollments = array_values(self::fetch_user_enrolments($enrolid->id));
         $enrollmentscopy = self::into_array_values($enrollments);
-        // Building the string to query the users info
+        // Construir la cadena para consultar la información de los usuarios
         $querystring = self::user_query_string($enrollments);
 
-        // Getting only the users that belongs to the course and that were assigned as students
+        // Obtener solo los usuarios que pertenecen al curso y que fueron asignados como estudiantes
         $studentsids = array_values(self::fetch_user_roles($querystring, $roleid, $contextid));
 
-        // Building the string to query the users info
+        // Construir la cadena para consultar la información de los usuarios
         $querystring = self::user_query_string($studentsids) ?? '';
 
-        // Fetch the users main info
-        $query = empty($conditions) 
-            ? 'SELECT id, username, lastname, firstname, email FROM {user} WHERE id IN (' . $querystring . ') ORDER BY lastname ASC OFFSET ' . ($offset * $limit) . ' LIMIT ' . $limit 
+        // Obtener la información principal de los usuarios
+        $query = empty($conditions)
+            ? 'SELECT id, username, lastname, firstname, email FROM {user} WHERE id IN (' . $querystring . ') ORDER BY lastname ASC OFFSET ' . ($offset * $limit) . ' LIMIT ' . $limit
             : 'SELECT id, username, lastname, firstname, email FROM {user} WHERE id IN (' . $querystring . ') ' . $conditions . ' ORDER BY lastname ASC';
 
-        // Se trae la información de los aprendices
+        // Obtener la información de los estudiantes
         $studentsinfo = !empty($querystring) ? $DB->get_records_sql($query) : [];
 
-        // Student info format
+        // Formato de la información de los estudiantes
         $students_data = [];
-        // Format the student data
+        // Formato de la información de los estudiantes
         foreach ($studentsinfo as $studentinfo) {
             $id = $studentinfo->id;
+            $username = $studentinfo->username;
+
+            // 1. Extraer número y sufijo del documento
+            $tipo = '';
+            if (preg_match('/^(\d+)(CC|TI|CE|PEP|PPT)$/i', $username, $m)) {
+                // $m[1] = solo dígitos, $m[2] = CC|TI|… (insensible a mayúsculas)
+                $documento = $m[1];
+                $tipo = strtoupper($m[2]);
+            } else {
+                // Si no coincide, mantenemos todo como documento y tipo vacío
+                $documento = $username;
+            }
+
+            // 2. Buscamos el estado de matrícula como antes
             $filtered_array = array_values(array_filter($enrollmentscopy, function ($item) use ($id) {
                 return $item['userid'] == $id;
             }));
 
+            // 3. Armamos el array incluyendo el nuevo campo 'tipo' y, opcionalmente,
+            //    si quieres renombrar username → documento, podrías usar 'documento' en lugar de 'username'.
             $student_data = [
                 'id' => $id,
-                'username' => $studentinfo->username,
+                // tu plantilla hoy usa {{username}} para Documento; lo dejamos así:
+                'username' => $documento,
+                // nuevo campo para que la segunda columna sea {{tipo}}
+                'tipo' => $tipo,
                 'lastname' => $studentinfo->lastname,
                 'firstname' => $studentinfo->firstname,
                 'email' => $studentinfo->email,
@@ -82,37 +101,37 @@ class fetch_students
             $students_data[] = $student_data;
         }
 
-        // Return the students data formatted
+        // Devolver los datos de los estudiantes formateados
         return [
-            'students_data' => $students_data, 
-            'pages' => empty($conditions) ? (int) ceil(count($studentsids) / $limit) : ceil(count($students_data) / $limit), 
+            'students_data' => $students_data,
+            'pages' => empty($conditions) ? (int) ceil(count($studentsids) / $limit) : ceil(count($students_data) / $limit),
             'studentsamount' => count($studentsids)
         ];
     }
 
-    // Function to fetch all the enrollments related with enrolid
+    // Función para obtener todas las inscripciones relacionadas con enrolid
     public static function fetch_user_enrolments($enrolid)
     {
         global $DB;
 
-        // Fecth the user enrollments
+        // Obtener las inscripciones de los usuarios
         $userenrolments = $DB->get_records('user_enrolments', ['enrolid' => $enrolid], '', 'userid, status');
 
         return $userenrolments;
     }
 
-    // Function to fetch all the students related to a context and userids
+    // Función para obtener todos los estudiantes relacionados con un contexto y sus ID de usuario
     public static function fetch_user_roles($querystring, $roleid, $contextid)
     {
         global $DB;
 
-        // Fecth the user enrollments
+        // Obtener las inscripciones de los usuarios
         $userenrolments = empty($querystring) ? [] : $DB->get_records_sql('SELECT userid FROM {role_assignments} WHERE roleid=:roleid AND contextid = :contextid AND userid IN (' . $querystring . ')', array('roleid' => $roleid, 'contextid' => $contextid));
 
         return $userenrolments;
     }
 
-    // Function to build query string with userid
+    // Función para crear una cadena de consulta con ID de usuario
     public static function user_query_string($array)
     {
         $string = '';
@@ -123,7 +142,7 @@ class fetch_students
         return rtrim($string, ","); // Se retrna la cadena generada eliminando la última ","
     }
 
-    // Function to transform all the items into array values
+    // Función para transformar todos los elementos en valores de matriz
     public static function into_array_values($array)
     {
         $len = count($array);
@@ -134,7 +153,7 @@ class fetch_students
         return $array;
     }
 
-    // Function to check if the attendance should be close or open to be edit
+    // Función para verificar si la asistencia debe estar cerrada o abierta para ser editada
     public static function close_validation($courseid)
     {
         global $USER, $DB;
@@ -165,7 +184,7 @@ class fetch_students
 
     }
 
-    // Function to check if the attendance should be close or open to be edit
+    // Función para verificar si la asistencia debe estar cerrada o abierta para ser editada
     public static function close_validation_retard($courseid, $initial, $final)
     {
         global $USER, $DB;

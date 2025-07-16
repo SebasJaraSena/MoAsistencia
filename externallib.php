@@ -33,15 +33,15 @@ require_once(__DIR__ . '/classes/form/edit.php');
 require_once(__DIR__ . '/classes/util/report_downloader.php');
 require_once(__DIR__ . '/classes/util/detail_report_downloader.php');
 
-
+// Clase para la conexión externa
 class local_asistencia_external
 {
-
+    // Función para obtener los estudiantes
     public static function fetch_students($contextid, $courseid, $roleid, $offset, $limit = 10, $condition)
     {
         return fetch_students::fetch_students($contextid, $courseid, $roleid, $offset, $limit, $condition);
     }
-
+    // Función para editar
     public static function edit()
     {
        /*  return edit::definition(); */
@@ -49,48 +49,48 @@ class local_asistencia_external
        $form->definition(); 
 
     }
-
+    // Función para ejecutar una consulta
     public static function query($query, $params = [])
     {
         $thequery = new foreing_db_connection();
         return $thequery->query($query, $params);
     }
-
+    // Función para obtener el reporte de asistencia
     public static function fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)
     {
         return fetch_activities::fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid);
     }
-
+    // Función para obtener el reporte de asistencia detallado
     public static function fetch_attendance_report_detailed($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)
     {
         return fetch_activities::fetch_attendance_report_detailed($attendancehistory, $initialdate, $finaldate, $cumulous, $userid);
     }
-
-    public static function fetch_activities_report()
+    // Función para obtener el reporte de actividades
+    public static function fetch_activities_report($courseid)
     {
-        return fetch_activities::fetch_activities_report();
+        return fetch_activities::fetch_activities_report($courseid);
     }
-
+    // Función para obtener el reporte de asistencia
     public static function attendance_report($data, $initaldate, $finaldate, $shortname)
     {
         return report_donwloader::attendance_report($data, $initaldate, $finaldate, $shortname);
     }
-
+    // Función para obtener el reporte de asistencia detallado
     public static function attendance_detailed_report($filename, $arraydata, $dataformat, $userName, $shortname, $initialdate, $finaldate)
     {
         return detailed_report_donwloader::generate_report_pdf($filename, $arraydata, $dataformat, $userName, $shortname, $initialdate, $finaldate);
     }
-
+    // Función para cerrar la validación
     public static function close_validation($courseid)
     {
         return fetch_students::close_validation($courseid);
     }
-
+    // Función para cerrar la validación de retardos    
     public static function close_validation_retard($courseid, $initial, $final)
     {
         return fetch_students::close_validation_retard($courseid, $initial, $final);
     }
-
+    // Función para obtener el reporte de actividades
     public static function activityReport($filename, $userid)
     {
         return detailed_report_donwloader::activityReport($filename, $userid);

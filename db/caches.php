@@ -23,7 +23,7 @@
  */
 
  defined('MOODLE_INTERNAL') || die();
-
+ // Definir los cachés del plugin
 $definitions = array(
     'coursestudentslist' => array( // 'my_cache' is the cache name
         'mode' => cache_store::MODE_SESSION,

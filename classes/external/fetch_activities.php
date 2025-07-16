@@ -28,7 +28,7 @@ require_once("$CFG->libdir/externallib.php");
 
 class fetch_activities
 {
-
+    // Función para obtener el reporte de asistencia
    public static function fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)
 {
     global $DB;
@@ -80,7 +80,7 @@ class fetch_activities
     return $studentsinfo;
 }
 
-
+    // Función para obtener el reporte de asistencia detallado
     public static function fetch_attendance_report_detailed($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)
     {
 
@@ -120,12 +120,15 @@ class fetch_activities
         return $studentsinfo;
     }
 
-    public static function fetch_activities_report()
+    // Función para obtener el reporte de actividades
+    public static function fetch_activities_report($courseid)
     {
-
         global $DB;
 
-        $activitiesinfo = $DB->get_records("local_asistencia_logs", null, 'date DESC', '*'); // Se obtiene toda al información de los logs
+        // Obtener el shortname del curso actual
+        $shortname = $DB->get_record('course', ['id' => $courseid], 'shortname')->shortname;
+
+        $activitiesinfo = $DB->get_records("local_asistencia_logs", null, 'date DESC', '*'); // Se obtiene toda la información de los logs
         $activitiesarray = [];
         foreach ($activitiesinfo as $ai) { // Ciclo para formatear la información para hacerla legible
             $userid = $ai->userid;
@@ -133,7 +136,10 @@ class fetch_activities
             $activity['message'] = $ai->message;
             $activity['date'] = $ai->date;
             $activity['username'] = $DB->get_record('user', ['id' => $userid])->username;
-            $activitiesarray[] = $activity;
+            // Filtrar por shortname en el mensaje
+            if (strpos($ai->message, $shortname) !== false) {
+                $activitiesarray[] = $activity;
+            }
         }
 
         return $activitiesarray;

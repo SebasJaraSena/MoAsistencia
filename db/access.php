@@ -21,7 +21,7 @@
  * @copyright Equipo zajuna
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+// Definir las capacidades del plugin
 $capabilities = [
     'local/asistencia:view' => [
         'captype' => 'read',
@@ -32,7 +32,7 @@ $capabilities = [
             'editingteacher' => CAP_ALLOW,
         ],
     ],
-
+    // Capacidad para ver la asistencia general
     'local/asistencia:vergeneral' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_COURSE,
@@ -41,7 +41,7 @@ $capabilities = [
             'teacher' => CAP_ALLOW,
         ],
     ],
-
+    // Capacidad para ver la asistencia anterior
     'local/asistencia:viewanterior' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_COURSE,

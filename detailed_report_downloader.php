@@ -27,7 +27,7 @@ use core\plugininfo\local;
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/externallib.php');
 
-// Creacion de cache
+// Creación de cache
 $cache = cache::make('local_asistencia', 'coursestudentslist');
 $userid = $USER->id;
 $initialdate = $_GET['initialdate'];
@@ -37,7 +37,7 @@ $courseid = $_GET['courseid'];
 $PAGE->set_url(new moodle_url('/local/asistencia/detailed_report_downloader.php'));
 $PAGE->set_context(\context_course::instance($courseid));
 $PAGE->set_title('Descargar reporte');
-
+// Función para formatear los datos
 function formatData($data)
 {
     global $DB;
@@ -69,7 +69,7 @@ function formatData($data)
     return $returndata;
 }
 global $CFG, $DB;
-
+// Obtener el nombre de la tabla
 $dbtablefieldname = "full_attendance";
 $attendancehistory = json_decode(json_encode($DB->get_records('local_asistencia_permanente', ['course_id' => $courseid])), true);
 $shortname = json_decode(json_encode($DB->get_record('course', ['id' => $courseid], 'shortname')), true)['shortname'];
@@ -77,7 +77,7 @@ $user = $DB->get_record('user', ['id' => $userid], 'firstname, lastname');
 $userName = $user->firstname . " " . $user->lastname;
 $result = local_asistencia_external::fetch_attendance_report_detailed($attendancehistory, $initialdate, $finaldate, $cumulous, $userid);
 $arraydata = formatData($result);
-
+// Verificar si hay datos   
 if (isset($arraydata[0][0])) {
     local_asistencia_external::attendance_detailed_report("Reporte_detallado_$shortname" . "_$initialdate" . "_$finaldate" . "_" . time(), $arraydata, 'pdf', $userName, $shortname, $initialdate, $finaldate);
 } else {

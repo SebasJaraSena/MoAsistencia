@@ -44,20 +44,18 @@ $currenturl = new moodle_url('/local/asistencia/index.php', $params);
 
 $dircomplement = explode("/", $currenturl->get_path());
 
+// Configurar la página
 $PAGE->set_url($currenturl);
 $PAGE->set_context($context);
 $PAGE->set_course(get_course($courseid));
 $PAGE->set_title('Lista Asistencia');
-$PAGE->set_heading(get_course($courseid)->shortname);
+$PAGE->set_heading(get_course($courseid)->fullname);
 $PAGE->navbar->add('Menú Asistencia');
 /* $PAGE->navbar->ignore_active_url(true); */
-
+// Cargar los archivos CSS y JS
 $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', ['v' => time()]));
 $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
 $PAGE->requires->js_call_amd('local_asistencia/attendance_views', 'init');
-
-// Breadcrumb
-/* local_asistencia_setup_breadcrumb('Menú'); */
 
 // Contexto para Mustache
 $templatecontext = (object) [
@@ -68,7 +66,7 @@ $templatecontext = (object) [
     'bannerurl' => new moodle_url('/local/asistencia/pix/banner.jpg')
 ];
 
-// Renderizar
+// Renderizar la página
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('local_asistencia/menu', $templatecontext);
 echo $OUTPUT->footer();

@@ -15,10 +15,17 @@ El Sistema de Asistencia está construido como un plugin local de Moodle, siguie
 
 ### 1. Frontend
 - **Interfaz de Usuario**
-  - Templates Mustache para vistas
+  - Templates Mustache para vistas (ver sección 2.1 para detalle de cada plantilla)
   - Hojas de estilo CSS personalizadas
   - Componentes JavaScript AMD
   - Formularios interactivos
+  - **Mejoras recientes:**
+    - Miga de pan adaptada a la plataforma Zajuna
+    - Paginación en listados de asistencia y asistencia anterior
+    - El módulo de actividades fue reemplazado por logs de descarga, con búsqueda y descarga de reportes
+    - Actualización de nomenclatura de estados de asistencia
+    - Mejoras en la descarga de reportes Excel (nombre de archivo con fecha de descarga)
+    - Correcciones ortográficas y de interfaz
 
 - **JavaScript (AMD)**
   - Módulo de asistencia (`attendance_observations.js`)
@@ -190,6 +197,32 @@ Los diagramas detallados de la arquitectura se encuentran en:
 - Proceso de instalación documentado
 - Scripts de migración
 - Procedimientos de backup
+
+## 2.1. Plantillas Mustache y su propósito
+
+- **activities.mustache**  
+  Muestra el log de descargas (antes actividades), con tabla de mensajes, fecha y usuario. Incluye buscador y paginación, y botón para descargar el reporte filtrado.
+
+- **history.mustache**  
+  Vista principal del historial de asistencia. Permite filtrar por fecha, buscar estudiantes, descargar reportes (Excel/PDF), y alternar entre vista consolidada y paginada. Muestra la asistencia de todos los estudiantes en el curso, con sus estados y detalles por fecha.
+
+- **previous_attendance.mustache**  
+  Permite gestionar y visualizar la asistencia de semanas anteriores. Incluye filtros por semana, búsqueda de estudiantes, edición de asistencias pasadas, y paginación. Permite guardar cambios y ver detalles por estudiante y fecha.
+
+- **studentslist.mustache**  
+  Muestra la lista de estudiantes para tomar asistencia en la semana actual. Incluye buscador, formulario para registrar asistencia, campos para observaciones y horas, y controles para guardar o editar la asistencia. Soporta paginación y bloqueo de edición según el estado.
+
+- **error.mustache**  
+  Plantilla para mostrar mensajes de error o advertencia. Incluye botones para volver a la página principal o configurar la base de datos externa si es necesario.
+
+- **manage.mustache**  
+  Vista de administración/configuración del sistema de asistencia. Permite acceder a la página principal, ver el título de la sección y acceder al listado de logs de descarga.
+
+- **menu.mustache**  
+  Menú principal del sistema de asistencia. Muestra botones para acceder a: asistencia general, asistencia anterior, histórico y logs de descargas. Los botones se adaptan según los permisos del usuario.
+
+- **menuPicture.mustache**  
+  Menú visual con botones gráficos (imágenes SVG) para acceder a las principales funciones: asistencia general, completar asistencia anterior, histórico y logs de descargas (si está habilitado). Proporciona una navegación rápida y visualmente atractiva.
 
 ---
 

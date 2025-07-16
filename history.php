@@ -68,7 +68,7 @@ local_asistencia_build_breadcrumbs($courseid, 'historial');
 
 //  Título y heading
 $PAGE->set_title('Históricos Asistencia');
-$PAGE->set_heading(get_course($courseid)->shortname);
+$PAGE->set_heading(get_course($courseid)->fullname);
 
 //  JS y CSS
 $PAGE->requires->js_call_amd('local_asistencia/attendance_observations', 'init');
@@ -149,12 +149,12 @@ function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $us
 }
 
 function getWeekRange($initialdate, $finaldate)
-{ // Funtion that establishes the range of days tha would be shown in the table header
+{ // Función que establece el rango de días que se mostrarían en el encabezado de la tabla
     $week = ['Monday' => 'L', 'Tuesday' => 'M', 'Wednesday' => 'X', 'Thursday' => 'J', 'Friday' => 'V', 'Saturday' => 'S', 'Sunday' => 'D']; // Se define traductor de días
     $fullmonth = [];
-    // Modify the date to the start of the week (Monday)
-    $firstday = DateTime::createFromFormat('Y-m-d', $initialdate); // To get the initial date
-    $lastday = DateTime::createFromFormat('Y-m-d', $finaldate); // To get the final date
+    // Modificar la fecha al inicio de la semana (lunes)
+    $firstday = DateTime::createFromFormat('Y-m-d', $initialdate); // Obtener la fecha inicial
+    $lastday = DateTime::createFromFormat('Y-m-d', $finaldate); // 
     $aux = $lastday->diff($firstday)->days;
     for ($i = 0; $i <= (int) $aux; $i++) { // Se crea rango de fechas que va a ser mostrado en el header de la tabla
         if ($i !== 0) {
@@ -162,17 +162,18 @@ function getWeekRange($initialdate, $finaldate)
         }
         $fullmonth[] = ['day' => $week[$firstday->format('l')], 'date' => $firstday->format('d/m'), 'current' => date('d/m') == $firstday->format('d/m') ? 0 : 1];
     }
-    // Format the dates to your preferred format
+    // Formatee las fechas según su formato preferido
     return $fullmonth;
 }
 
 $dbtablefieldname = "full_attendance";
 $historyattendance = $DB->get_records('local_asistencia_permanente', ['course_id' => $courseid]); // Se consulta todo el histórico relacionado al curso
 
-
+// Guardar el histórico en la caché
 $cache->set("H_$courseid", json_encode($historyattendance));
 $cachehistoryattendance = json_decode($cache->get("H_$courseid"), true);
 
+// Paginador
 $pageurl = $attendancepage - 1 ?? 0;
 $currentpage = $pageurl + 1;
 $postfilter;
@@ -180,10 +181,12 @@ $date = new DateTime();
 $initialdate = clone $date;
 $finaldate = clone $date;
 
+// Filtros
 $day = $_GET['day'] ?? 0;
 $week = $_GET['week'] ?? 0;
 $range_dates = $_GET['range_dates'] ?? 0;
 
+// Validar si las fechas son válidas
 if (isset($_GET['initial']) && isset($_GET['final']) && ($day || $week || $range_dates)) {
     $inital = (int) $_GET['initial'] <= strtotime($initialdate->format(('Y-m-d'))) / 100;
     $final = ((int) $_GET['final'] < strtotime($finaldate->modify('last day of')->format(('Y-m-d'))) / 100) || (int) $_GET['final'] < strtotime($finaldate->modify('next sunday')->format(('Y-m-d'))) / 100;
@@ -195,6 +198,7 @@ $inital = isset($_GET['initial']) && is_numeric($_GET['initial'])
     ? ((int) $_GET['initial'] <= strtotime($initialdate->format('Y-m-d')) / 100)
     : false;
 
+// Validar si la fecha final es válida
 $final = isset($_GET['final']) && is_numeric($_GET['final'])
     ? (
         ((int) $_GET['final'] < strtotime($finaldate->modify('last day of')->format('Y-m-d')) / 100)
@@ -209,24 +213,26 @@ if (!(isset($_GET['initial']) && isset($_GET['final']) && ($day || $week || $ran
     $range_dates = 0;
 }
 
-// Aplicar fechas
+// Aplicar fechas       
 if ($inital && isset($_GET['initial'])) {
     $initialdate = (new DateTime())->setTimestamp((int) $_GET['initial'] * 100);
 } else {
     $initialdate->modify('first day of');
 }
 
+// Aplicar fechas
 if ($final && isset($_GET['final'])) {
     $finaldate = (new DateTime())->setTimestamp((int) $_GET['final'] * 100);
 } else {
     $finaldate->modify('last day of');
 }
 
+// Inicializar variables
 $op = 1;
 $postfilter;
 
 $filter_method = $_GET['filtro_fecha'] ?? ($_POST['filtro_fecha'] ?? null);
-
+// Aplicar rango de fechas
 if ($filter_method === 'range_dates') {
     $day = 0;
     $week = 0;
@@ -260,10 +266,10 @@ if ($filter_method === 'range_dates') {
     $finaldate = new DateTime();
 }
 
-
+// Formulario de filtros
 $form = new edit();
 $condition = '';
-
+// Validar si el formulario se canceló
 if ($form->is_cancelled()) {
     $condition = '';
 } else if ($fromform = $form->get_data()) {
@@ -283,19 +289,32 @@ if ($form->is_cancelled()) {
         }
     }
 }
-
+// Obtener el rango de días
 $monthrange = getWeekRange($initialdate->format('Y-m-d'), $finaldate->format('Y-m-d'));
 
+// Obtener el curso
 $course = get_course($courseid);
+// Obtener el nombre corto del curso
 $shortname = $course->shortname;
+
+// Mostrar el encabezado
 echo $OUTPUT->header();
+
+// Mostrar notificación si no hay información de asistencia
+if (optional_param('noinfo', 0, PARAM_INT)) {
+    echo $OUTPUT->notification(
+        'No hay información de asistencia.',
+        \core\output\notification::NOTIFY_ERROR
+    );
+}
+// Obtener el usuario
 $userid = $USER->id;
 $adminsarray = explode(",", $DB->get_record('config', ['name' => 'siteadmins'])->value);
 $configbutton = in_array($userid, $adminsarray) ? 1 : 0;
 $pages_attendance_string = $cache->get('attendancelist' . $courseid);
 $cache->delete('attendancelist' . $courseid);
 $attendance_data = $cache->get($courseid);
-
+// Obtener los datos de asistencia
 if (isset($pages_attendance_string)) {
     $search = $_GET['search'] ?? '';
 
@@ -315,7 +334,7 @@ if (isset($pages_attendance_string)) {
         $text = preg_replace('/\s+/', ' ', $text); // elimina espacios dobles
         return trim($text);
     }
-
+    // Aplicar búsqueda si existe
     if (!empty($search)) {
         $normalizedSearch = normalize_for_search($search);
 
@@ -331,6 +350,71 @@ if (isset($pages_attendance_string)) {
             $normalizedStudentText = normalize_for_search($text);
 
             return strpos($normalizedStudentText, $normalizedSearch) !== false;
+        });
+    }
+
+    // ...
+    $studentstatus = $_GET['studentstatus'] ?? null;
+
+    // Filtrado por estado
+    if ($studentstatus !== null && $studentstatus !== '') {
+        $studentslist = array_filter($studentslist, function ($student) use ($studentstatus) {
+            return (string) $student['status'] === (string) $studentstatus;
+        });
+    }
+
+    $comulus = isset($_GET['range']) ? intval($_GET['range']) : 0; 
+
+    // Filtrado por tipo de asistencia
+    $attendancefilter = $_GET['attendancefilter'] ?? null;
+    if ($attendancefilter !== null && $attendancefilter !== '') {
+        $studentslist = array_filter($studentslist, function ($student) use ($attendancefilter, $cachehistoryattendance, $dbtablefieldname, $initialdate, $finaldate, $userid, $comulus) {
+            $studentid = $student['id'];
+            $filtered = !empty($cachehistoryattendance) ? array_filter($cachehistoryattendance, function ($item) use ($studentid) {
+                return $item['student_id'] == $studentid;
+            }) : [];
+
+            if (empty($filtered)) {
+                return false;
+            }
+
+            $firstKey = array_key_first($filtered);
+            if ($firstKey === null || !isset($cachehistoryattendance[$firstKey][$dbtablefieldname])) {
+                return false;
+            }
+
+            $jsonStr = $cachehistoryattendance[$firstKey][$dbtablefieldname];
+            if (empty($jsonStr)) {
+                return false;
+            }
+
+            $jsonattendance = json_decode($jsonStr, true);
+            if (empty($jsonattendance)) {
+                return false;
+            }
+
+            // Filtrar por rango de fechas
+            $filtereddates = array_filter($jsonattendance, function ($item) use ($initialdate, $finaldate) {
+                return ($item['DATE'] >= $initialdate->format('Y-m-d')) && ($item['DATE'] <= $finaldate->format('Y-m-d'));
+            });
+
+            if ($comulus == 0) { // Personal: SOLO asistencias tomadas por el instructor actual
+                foreach ($filtereddates as $attendance) {
+                    if (
+                        isset($attendance['TEACHER_ID']) && $attendance['TEACHER_ID'] == $userid &&
+                        isset($attendance['ATTENDANCE']) && (string) $attendance['ATTENDANCE'] === (string) $attendancefilter
+                    ) {
+                        return true;
+                    }
+                }
+            } else { // Consolidado: buscar en todas las asistencias
+                foreach ($filtereddates as $attendance) {
+                    if (isset($attendance['ATTENDANCE']) && (string) $attendance['ATTENDANCE'] === (string) $attendancefilter) {
+                        return true;
+                    }
+                }
+            }
+            return false; // Si no cumple, NO lo muestres
         });
     }
 
@@ -356,6 +440,7 @@ if (isset($pages_attendance_string)) {
     }
 
 }
+// Obtener los datos de asistencia
 $raw = $cache->get('attendancelist' . $courseid);
 if ($raw !== false && $raw !== null) {
     $pages_attendance_array = json_decode($raw, true);
@@ -363,7 +448,7 @@ if ($raw !== false && $raw !== null) {
     // Sin caché previa, definimos al menos 'pages' para evitar errores
     $pages_attendance_array = ['pages' => 0];
 }
-
+// Paginador
 for ($page = 1; $page <= $pages_attendance_array['pages']; $page++) { // Paginador
     if ($page === 1) {
         $pages[$page] = [
@@ -394,8 +479,8 @@ for ($page = 1; $page <= $pages_attendance_array['pages']; $page++) { // Paginad
     }
 }
 
-
-$comulus = isset($_GET['range']) ? $_GET['range'] : 0;
+// Obtener los datos de asistencia
+/* $comulus = isset($_GET['range']) ? intval($_GET['range']) : 0; */
 $temporalattendance = array_values($DB->get_records('local_asistencia', ['courseid' => $courseid]));
 $students = studentsFormatMonth(
     $pagedstudents,
@@ -407,8 +492,8 @@ $students = studentsFormatMonth(
     $finaldate->format('Y-m-d'),
     $comulus
 );
-
-
+$filtroFecha = $filter_method;
+// Obtener los datos de asistencia
 $studentslist[$attendancepage] = $students;
 //$closeattendance = $studentsamount == count($temporalattendance) ? 0 : 1;
 $cache->set('attendancelist' . $courseid, json_encode($studentslist));
@@ -416,6 +501,8 @@ $search = optional_param('search', '', PARAM_RAW);
 $searchEscaped = rawurlencode($search);
 $studentsstring = $cache->get('attendancelist' . $courseid);
 $students = json_decode($studentsstring, true);
+// Variables para el filtro de asistencia
+$attendancefilter = $_GET['attendancefilter'] ?? '';
 $templatecontext = (object) [
     'students' => $students[$attendancepage],
     'courseid' => $courseid,
@@ -427,6 +514,7 @@ $templatecontext = (object) [
     'currentpage' => $currentpage,
     'initial_value' => $initialdate->format('Y-m-d'),
     'final_value' => $finaldate->format('Y-m-d'),
+    'filtro_fecha' => $filtroFecha,
     'isrange1' => (isset($_GET['range']) && $_GET['range'] === '1'),
     'day' => $day,
     'week' => $week,
@@ -436,8 +524,17 @@ $templatecontext = (object) [
     'limit' => $limit,
     'dirroot' => $dircomplement[1],
     'search' => $search,
-    'searchEscaped' => $searchEscaped, 
-
+    'searchEscaped' => $searchEscaped,
+    'studentstatus' => $studentstatus,
+    'isstatus0' => $studentstatus === '0',
+    'isstatus1' => $studentstatus === '1',
+    'isstatusAll' => $studentstatus === '',
+    'attendancefilter' => $attendancefilter,
+    'isattendanceAll' => $attendancefilter === '',
+    'isattendance0' => $attendancefilter === '0',
+    'isattendance1' => $attendancefilter === '1',
+    'isattendance2' => $attendancefilter === '2',
+    'isattendance3' => $attendancefilter === '3',
 ];
 
 echo $OUTPUT->render_from_template('local_asistencia/history', $templatecontext);

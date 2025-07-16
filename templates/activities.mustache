@@ -41,25 +41,52 @@ Example context (json):
 <br>
 
 <div class="container">
-<div class=" d-flex justify-content-end">
+    <div class="row">
+        <div class="col d-flex">
+            <form method="get" action="/{{dirroot}}/local/asistencia/activities.php"
+                class="d-flex flex-wrap align-items-end ">
+                <input type="hidden" name="courseid" value="{{courseid}}">
+                <input type="hidden" name="search" value="{{search}}">
+                <div class="form-group">
+                    <label for="startdate">Fecha de generación desde:</label>
+                    <input type="date" name="startdate" id="startdate" value="{{startdate}}" class="form-control" />
+                </div>
 
-    <button id="color_btn" class="btn btn-primary "
-        onclick="location.href='/{{dirroot}}/local/asistencia/download_history.php?courseid={{courseid}}&search={{search}}'">
-        <i class="fa-regular fa-circle-down" style="margin-right: 8px;"></i>
-        <span>Descargar Reporte</span>
-    </button>
-</div>
-<br>
-   <form method="get" action="/{{dirroot}}/local/asistencia/activities.php" class=""
-    style="display: flex; align-items: center; gap: 10px;">
-    <input type="hidden" name="courseid" value="{{courseid}}">
-    <input type="text" name="search" value="{{search}}" class="form-control"
-        placeholder="Buscar por código, mensaje, fecha o username">
-    <button type="submit" class="btn btn-primary">Buscar</button>
-</form>
-<br>
+                <div class="form-group mx-2">
+                    <label for="enddate">Fecha de generación hasta:</label>
+                    <input type="date" name="enddate" id="enddate" value="{{enddate}}" class="form-control" />
+                </div>
+
+                <div class="form-group mx-2">
+                    <label for="submit"> </label>
+                    <button type="submit" id="color_btn" class="btn btn-primary">Filtrar</button>
+                </div>
+            </form>
+        </div>
+        <div class="col-auto d-flex align-items-center justify-content-end mt-4">
+            <button id="color_btn" class="btn btn-primary px-3 py-2 my-2" style="font-size: 0.85rem; line-height: 1.2;"
+                onclick="location.href='/{{dirroot}}/local/asistencia/download_history.php?courseid={{courseid}}&search={{search}}&startdate={{startdate}}&enddate={{enddate}}'">
+                <i class="fa-regular fa-circle-down" style="margin-right: 8px;"></i>
+                <span>Descargar Reporte</span>
+            </button>
+        </div>
+    </div>
+
+
+   
+        <form method="get" action="/{{dirroot}}/local/asistencia/activities.php" class=""
+            style="display: flex; align-items: center; gap: 10px;">
+            <input type="hidden" name="courseid" value="{{courseid}}">
+            <input type="hidden" name="startdate" value="{{startdate}}">
+            <input type="hidden" name="enddate" value="{{enddate}}">
+            <input type="text" name="search" value="{{search}}" class="form-control"
+                placeholder="Buscar por mensaje, fecha o nombre de usuario">
+            <button type="submit" id="color_btn" class="btn btn-primary">Buscar</button>
+    </form>
+    <br>
     <div class="fortable" style="width:auto; overflow-x: auto">
-        <table id="attendance-table" class="table table-hover table-container" style="width: 100%; table-layout: fixed;">
+        <table id="attendance-table" class="table table-hover table-container"
+            style="width: 100%; table-layout: fixed;">
             <thead>
                 <tr>
                     <th>MENSAJE</th>
@@ -81,7 +108,6 @@ Example context (json):
 
 </div>
 
-
 <div class="container my-2 d-flex flex-wrap justify-content-center">
     {{#pages}}
     <div class="mx-1">
@@ -96,7 +122,7 @@ Example context (json):
 
         {{^active}}
         <button type="button" class="btn btn-primary"
-            onclick="location.href='/{{dirroot}}/local/asistencia/activities.php?courseid={{courseid}}&page={{page}}&search={{search}}'">
+            onclick="location.href='/{{dirroot}}/local/asistencia/activities.php?courseid={{courseid}}&page={{page}}&search={{search}}&startdate={{startdate}}&enddate={{enddate}}'">
             {{page}}
         </button>
         {{/active}}

@@ -28,7 +28,7 @@ use core\plugininfo\local;
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/classes/form/edit.php');
 
-
+// Obtener el contexto del sistema
 $context = context_system::instance();
 $PAGE->set_url(new moodle_url('/local/asistencia/manage.php'));
 $PAGE->set_context($context);
@@ -36,10 +36,13 @@ $PAGE->set_title('Configuración Asistencia');
 
 require_capability('local/asistencia:manage', $context);
 
+// Crear el formulario
 $form = new edit();
 
+// Renderizar la página
 echo $OUTPUT->header();
 if ($fromform = $form->get_data()) {
+    // Recorrer los datos del formulario
     foreach ($fromform as $key => $value) {
         if ($key != 'submitbutton') {
             $record_insert_update = $DB->get_record('local_asistencia_config', ['name' => $key]);
@@ -55,6 +58,7 @@ if ($fromform = $form->get_data()) {
         }
     }
     try { // Inserción a logs
+        // Crear el registro
         $toinsert = new stdClass;
         $toinsert->code = "20";
         $toinsert->message = "Configuración de la base de datos guardada con éxito.";
@@ -67,10 +71,14 @@ if ($fromform = $form->get_data()) {
     \core\notification::add("Configuración guardada éxitosamente.", \core\output\notification::NOTIFY_SUCCESS);
 }
 
+// Obtener el contexto del sistema
 $templatecontext = (object) [
     'h1' => get_string('pluginmanagetitle', 'local_asistencia'),
 ];
 
+// Renderizar la página
 echo $OUTPUT->render_from_template('local_asistencia/manage', $templatecontext);
+// Mostrar el formulario
 echo $form->display();
+// Renderizar el pie de página
 echo $OUTPUT->footer();

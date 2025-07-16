@@ -1,179 +1,332 @@
-# Políticas de Seguridad Implementadas - Sistema de Asistencia
+# Políticas de Seguridad - Sistema de Asistencia
 
 ## Índice
 1. [Introducción](#introducción)
-2. [Control de Acceso Actual](#control-de-acceso-actual)
-3. [Validación de Datos Implementada](#validación-de-datos-implementada)
-4. [Seguridad en Base de Datos Actual](#seguridad-en-base-de-datos-actual)
-5. [Áreas de Mejora](#áreas-de-mejora)
+2. [Control de Acceso](#control-de-acceso)
+3. [Validación de Datos](#validación-de-datos)
+4. [Seguridad en Base de Datos](#seguridad-en-base-de-datos)
+5. [Protección de Sesiones](#protección-de-sesiones)
+6. [Auditoría y Logging](#auditoría-y-logging)
+7. [Respuesta a Incidentes](#respuesta-a-incidentes)
+8. [Seguridad en Caché](#seguridad-en-caché)
+9. [Seguridad en Observaciones](#seguridad-en-observaciones)
 
 ## Introducción
 
-Este documento describe las medidas de seguridad actualmente implementadas en el plugin de asistencia para Moodle. Se detallan los mecanismos de seguridad existentes y se identifican áreas de mejora.
+Este documento define las políticas y procedimientos de seguridad implementados en el plugin de asistencia para Moodle. Estas políticas son obligatorias y deben ser seguidas por todos los desarrolladores y administradores del sistema.
 
-## Control de Acceso Actual
+## Control de Acceso
 
-### 1. Autenticación Base
+### 1. Autenticación
 ```php
-// Implementado en attendance.php e index.php
-require_once(__DIR__ .'/../../config.php');
-require_login(); 
+// Implementado en attendance.php
+require_login(); // Obligatorio en todos los puntos de entrada
 
-// Verificación básica de capacidades
+// Verificación de capacidades
 require_capability('local/asistencia:view', $context);
 ```
 
-### 2. Validación de Contexto Implementada
+### 2. Roles y Permisos
 ```php
-// Implementado en el sistema actual
-$context = context_course::instance($courseid);
-$PAGE->set_context($context);
+// Definido en db/access.php
+$capabilities = [
+    'local/asistencia:view' => [
+        'riskbitmask' => RISK_PERSONAL,
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        ]
+    ],
+    'local/asistencia:edit' => [
+        'riskbitmask' => RISK_DATALOSS,
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_COURSE,
+        'archetypes' => [
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW
+        ]
+    ]
+];
 ```
 
-### 3. Control de Roles Existente
+### 3. Validación de Contexto
 ```php
-// Implementado en el código actual
-$adminsarray = explode(",",$DB->get_record('config', ['name' => 'siteadmins'])->value);
-$configbutton = in_array($userid, $adminsarray)?1:0;
-```
-
-## Validación de Datos Implementada
-
-### 1. Validación de Asistencia
-```php
-// Implementado en attendance.php
-if(!empty($postattendance) && $close == 0) { 
-    $len = count($_POST['userids']);
-    $extrainfo = $_POST['extrainfo'];
-    $extrainfoNum = $_POST['extrainfoNum'];
-    $dates = $_POST['date'];
+public static function validate_context($contextid) {
+    // Verificar que el contexto existe y es válido
+    $context = context::instance_by_id($contextid);
+    self::validate_context($context);
     
-    // Validación de datos existentes
-    if($postattendance[$i]=="-1"){
-        $observations = "";
-        $amountHours = 0;
-    } else {
-        $observations = $extrainfo[$i-$auxi];
-        $amountHours = $extrainfoNum[$i-$auxi];
+    // Verificar permisos en el contexto
+    if (!has_capability('local/asistencia:view', $context)) {
+        throw new required_capability_exception($context, 'local/asistencia:view', 'nopermissions', 'local_asistencia');
     }
 }
 ```
 
-### 2. Validación de Fechas
+## Validación de Datos
+
+### 1. Entrada de Usuario
 ```php
-// Implementado en el sistema actual
-$today = date('Y-m-d');
-$sql = "SELECT id FROM {local_asistencia} WHERE \"date\"<> '$today'";
-```
-
-## Seguridad en Base de Datos Actual
-
-### 1. Uso de API de Moodle
-```php
-// Implementado en el código actual
-global $DB;
-
-// Consultas seguras usando la API de Moodle
-$records = $DB->get_records('local_asistencia', ['courseid' => $courseid]);
-$record_insert_update = $DB->get_record('local_asistencia', [
-    'courseid' => $courseid, 
-    'studentid'=> $studentid, 
-    'teacherid' => $teacherid
-]);
-```
-
-### 2. Manejo de Transacciones Básico
-```php
-// Implementado para operaciones de guardado
-if(!empty($record_insert_update)){ 
-    $record_insert_update->attendance = $attendance;
-    $record_insert_update->date = date('Y-m-d');
-    $record_insert_update->observations = $observations;
-    $record_insert_update->amounthours = $amountHours;
-    $DB->update_record('local_asistencia', $record_insert_update);
+class input_validator {
+    public static function validate_attendance_data($data) {
+        // Validar formato de fecha
+        if (!self::is_valid_date($data['date'])) {
+            throw new invalid_parameter_exception('Formato de fecha inválido');
+        }
+        
+        // Validar estado de asistencia
+        if (!in_array($data['attendance'], [-1, 0, 1, 2, 3, -8])) {
+            throw new invalid_parameter_exception('Estado de asistencia inválido');
+        }
+        
+        // Validar horas
+        if ($data['amounthours'] < 0 || $data['amounthours'] > 24) {
+            throw new invalid_parameter_exception('Cantidad de horas inválida');
+        }
+        
+        // Sanitizar observaciones
+        $data['observations'] = clean_param($data['observations'], PARAM_TEXT);
+        
+        // Validar retrasos
+        if (isset($data['retard'])) {
+            self::validate_retard($data['retard']);
+        }
+        
+        return $data;
+    }
 }
 ```
 
-### 3. Cache Implementado
+### 2. Sanitización de Salida
 ```php
-// Sistema de caché implementado
+// En templates y salida HTML
+$output = format_text($data, FORMAT_HTML, ['trusted' => false]);
+echo clean_text($output);
+
+// En observaciones
+$observations = clean_param($observations, PARAM_TEXT);
+```
+
+## Seguridad en Base de Datos
+
+### 1. Prevención de SQL Injection
+```php
+public static function get_attendance_records($courseid, $studentid) {
+    global $DB;
+    
+    // Usar parámetros nombrados
+    $params = [
+        'courseid' => $courseid,
+        'studentid' => $studentid
+    ];
+    
+    // Usar API de Moodle para consultas
+    return $DB->get_records('local_asistencia_permanente', $params);
+}
+```
+
+### 2. Transacciones
+```php
+public static function save_attendance_batch($records) {
+    global $DB;
+    
+    try {
+        $transaction = $DB->start_delegated_transaction();
+        
+        foreach ($records as $record) {
+            self::validate_attendance_data($record);
+            $DB->insert_record('local_asistencia_permanente', $record);
+        }
+        
+        $transaction->allow_commit();
+    } catch (Exception $e) {
+        $transaction->rollback($e);
+    }
+}
+```
+
+## Protección de Sesiones
+
+### 1. Manejo de Sesiones
+```php
+// Implementado en cada archivo PHP
+require_sesskey(); // Para operaciones POST
+
+// Validación en formularios
+$mform->addElement('hidden', 'sesskey', sesskey());
+
+// Manejo de breadcrumbs
+if (!isset($SESSION->asistencia_breadcrumb)) {
+    $SESSION->asistencia_breadcrumb = [];
+}
+```
+
+### 2. Prevención de CSRF
+```php
+// En formularios
+$url = new moodle_url('/local/asistencia/attendance.php');
+$mform = new attendance_form($url);
+
+// Validación
+if ($fromform = $mform->get_data()) {
+    require_sesskey();
+    // Procesar datos
+}
+```
+
+## Auditoría y Logging
+
+### 1. Registro de Eventos
+```php
+class attendance_logger {
+    public static function log_attendance_change($courseid, $userid, $action) {
+        $event = \local_asistencia\event\attendance_updated::create([
+            'contextid' => context_course::instance($courseid)->id,
+            'userid' => $userid,
+            'other' => [
+                'action' => $action
+            ]
+        ]);
+        $event->trigger();
+    }
+}
+```
+
+### 2. Monitoreo de Actividades
+```php
+public static function monitor_suspicious_activity($userid) {
+    $attempts = get_user_preferences('local_asistencia_failed_attempts', 0, $userid);
+    
+    if ($attempts > 5) {
+        self::notify_admin("Actividad sospechosa detectada para el usuario $userid");
+        self::block_temporary_access($userid);
+    }
+}
+```
+
+## Seguridad en Caché
+
+### 1. Manejo de Caché
+```php
+// Implementación segura de caché
 $cache = cache::make('local_asistencia', 'coursestudentslist');
 $cache->set("course$courseid.user$userid", $condition);
+
+// Limpieza de caché
+$cache->delete("course$courseid.user$userid");
 ```
 
-## Control de Sesión Actual
-
-### 1. Manejo de Sesión Básico
+### 2. Protección de Datos en Caché
 ```php
-// Implementado en el sistema
-global $USER;
-$userid = $USER->id;
+// Sanitización de datos antes de almacenar en caché
+$cachedata = clean_param($data, PARAM_RAW);
+$cache->set($key, $cachedata);
 ```
 
-### 2. Validación de Permisos
+## Seguridad en Observaciones
+
+### 1. Validación de Observaciones
 ```php
-// Implementado en el código actual
-if (!has_capability('local/asistencia:view', $context)) {
-    // Restricción de acceso
+public static function validate_observations($observations) {
+    // Limitar longitud
+    if (strlen($observations) > 500) {
+        throw new invalid_parameter_exception('Las observaciones exceden el límite de caracteres');
+    }
+    
+    // Sanitizar contenido
+    return clean_param($observations, PARAM_TEXT);
 }
 ```
 
-## Áreas de Mejora Identificadas
+### 2. Manejo de Observaciones en JavaScript
+```javascript
+// En attendance_observations.js
+define(['jquery'], function($) {
+    return {
+        init: function() {
+            // Validación en cliente
+            $('#observations').on('input', function() {
+                if ($(this).val().length > 500) {
+                    // Mostrar error
+                }
+            });
+        }
+    };
+});
+```
 
-1. **Seguridad Prioritaria**
-   - Implementar validación exhaustiva de entrada de datos
-   - Añadir protección CSRF en formularios
-   - Implementar sistema de logging de eventos
+## Respuesta a Incidentes
 
-2. **Mejoras de Seguridad Secundarias**
-   - Sistema de auditoría completo
-   - Monitoreo de actividades sospechosas
-   - Sistema de backup y recuperación
+### 1. Manejo de Errores
+```php
+public static function handle_security_incident($error, $context) {
+    // Registrar incidente
+    self::log_security_incident($error, $context);
+    
+    // Limpiar caché si es necesario
+    if ($error->getCode() === 'cache_compromise') {
+        self::clear_compromised_cache();
+    }
+    
+    // Notificar administradores
+    self::notify_admins($error);
+}
+```
 
-3. **Validaciones Adicionales Necesarias**
-   - Sanitización de salida en templates
-   - Validación de formatos de fecha más robusta
-   - Validación de roles más granular
+### 2. Procedimientos de Recuperación
+```php
+public static function recover_from_incident($incident_type) {
+    switch ($incident_type) {
+        case 'cache_compromise':
+            self::clear_all_cache();
+            self::rebuild_cache();
+            break;
+        case 'data_corruption':
+            self::restore_from_backup();
+            self::validate_data_integrity();
+            break;
+    }
+}
+```
 
-## Estado Actual de Implementación
+## Recomendaciones de Implementación
 
-### Implementado ✅
-- Control de acceso básico
-- Validación básica de datos
-- Uso seguro de la API de base de datos
-- Sistema de caché
-- Control de roles básico
+1. **Actualizaciones de Seguridad**
+   - Mantener Moodle actualizado
+   - Revisar regularmente las dependencias
+   - Aplicar parches de seguridad
 
-### Pendiente ❌
-- Sistema de logging
-- Auditoría de eventos
-- Protección CSRF completa
-- Sistema de recuperación
-- Monitoreo de actividades sospechosas
+2. **Configuración Segura**
+   - Usar HTTPS
+   - Configurar headers de seguridad
+   - Implementar políticas de contraseñas fuertes
 
-## Recomendaciones Inmediatas
+3. **Monitoreo Continuo**
+   - Revisar logs regularmente
+   - Configurar alertas automáticas
+   - Realizar auditorías periódicas
 
-1. **Prioridad Alta**
-   - Implementar validaciones de entrada más robustas
-   - Añadir tokens CSRF en formularios
-   - Implementar logging básico de eventos críticos
+## Checklist de Seguridad
 
-2. **Prioridad Media**
-   - Mejorar el sistema de manejo de sesiones
-   - Implementar validaciones de formato más estrictas
-   - Añadir sistema de notificaciones de seguridad
+- [ ] Validación de entrada en todos los formularios
+- [ ] Sanitización de salida en todas las vistas
+- [ ] Control de acceso basado en roles
+- [ ] Protección contra CSRF
+- [ ] Logging de eventos críticos
+- [ ] Manejo seguro de sesiones
+- [ ] Prevención de SQL Injection
+- [ ] Backup regular de datos
 
-3. **Prioridad Baja**
-   - Implementar sistema de auditoría completo
-   - Desarrollar plan de recuperación de desastres
-   - Añadir monitoreo de actividades sospechosas
+## Contacto de Seguridad
 
-## Contacto para Temas de Seguridad
-
-Para reportar problemas de seguridad en el sistema actual:
-- Administrador del Sistema: [Contacto del administrador]
-- Email de Soporte: [Email de soporte]
+Para reportar vulnerabilidades de seguridad:
+- Email: security@ejemplo.com
+- Teléfono de emergencia: +XX XXX XXX XXX
+- Sistema de tickets: [URL]
 
 ---
 
-**Nota**: Este documento refleja el estado actual de la implementación de seguridad y debe actualizarse conforme se implementen nuevas medidas de seguridad. 
+**Nota**: Este documento debe ser revisado y actualizado regularmente para mantener su efectividad y relevancia. 
