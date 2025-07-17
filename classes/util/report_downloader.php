@@ -68,17 +68,17 @@ class report_donwloader
             $headers = array_map(function ($header) {
                 switch ($header) {
                     case 'idtype':
-                        return 'Tipo';
+                        return 'Tipo de documento';
                     case 'username_clean':
-                        return 'Documento';
+                        return 'Número de documento';
                     case 'firstname':
                         return 'Nombres';
                     case 'lastname':
                         return 'Apellidos';
                     case 'email':
-                        return 'Correo';
+                        return 'Correo electrónico';
                     case 'status':
-                        return 'Estado';
+                        return 'Estado del Aprendiz';
                     default:
                         return $header;
                 }
