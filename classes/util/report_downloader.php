@@ -46,24 +46,27 @@ class report_donwloader
             return isset($row['day0']);
         });
 
-        //si hay estudiantes con asistencia
+        // si hay estudiantes con asistencia
         if (!empty($attendanceFound)) {
 
-            //1. Recoger todas las fechas únicas
-            $dateSet = [];
+            //Recoger todas las fechas únicas
             foreach ($result as $row) {
-                foreach ($row as $key => $value) {
-                    if (preg_match('/^day(\d+)$/', $key, $matches)) {
-                        $dateSet[$row["day{$matches[1]}"]] = true;
-                    }
+                $i = 0;
+                while (isset($row["day$i"])) {
+                    $date = $row["day$i"];
+                    $teacher = $row["teacher$i"] ?? '';
+                    $key = $date . '|' . $teacher; // clave única por fecha y profesor/sesión
+                    $dateSet[$key] = $date; // guardamos solo la fecha como valor
+                    $i++;
                 }
             }
 
-            // 2. Ordenar cronológicamente
-            $dates = array_keys($dateSet);
+            // Ordenar cronológicamente
+            $dates = array_values($dateSet); // solo los valores (las fechas puras)
+
             sort($dates);
 
-            // 3. Cabeceras 
+            // Cabeceras 
             $fixedHeaders = ['idtype', 'username_clean', 'firstname', 'lastname', 'email', 'status'];
             $headers = array_map(function ($header) {
                 switch ($header) {
@@ -92,7 +95,7 @@ class report_donwloader
                 $headers[] = "$date - Instructor";
             }
 
-            // 4. Reorganizar por estudiante
+            // Reorganizar por estudiante
             $sortedData = [];
             foreach ($result as $row) {
 
@@ -108,14 +111,14 @@ class report_donwloader
                     $row['idtype'] = '';
                 }
 
-                // 4.1 Inicializar arrays de asistencia y flag
+                // Inicializar arrays de asistencia y flag
                 $dayState = [];
                 $dayTime = [];
                 $dayObservation = [];
                 $dayTeacher = [];
                 $hasAttendance = false;
 
-                // 4.2 Recolectar datos por día y marcar si hay asistencia
+                // Recolectar datos por día y marcar si hay asistencia
                 $i = 0;
                 while (isset($row["day$i"])) {
                     $date = $row["day$i"];
@@ -136,12 +139,12 @@ class report_donwloader
                     $i++;
                 }
 
-                // 4.3 Si nunca hubo asistencia, saltamos este registro
+                // Si nunca hubo asistencia, saltamos este registro
                 if (!$hasAttendance) {
                     continue;
                 }
 
-                // 4.4 Armar la parte fija de la fila (incluye ahora idtype correctamente)
+                // Armar la parte fija de la fila (incluye ahora idtype correctamente)
                 $studentFixedData = [];
                 foreach ($fixedHeaders as $field) {
                     if ($field === 'status') {
@@ -151,8 +154,7 @@ class report_donwloader
                         $studentFixedData[] = $row[$field] ?? '';
                     }
                 }
-
-                // 4.5 Añadir datos dinámicos fecha a fecha
+                //  Añadir datos dinámicos fecha a fecha
                 $finalRow = $studentFixedData;
                 foreach ($dates as $date) {
                     // Estado
@@ -200,7 +202,7 @@ class report_donwloader
                 $sortedData[] = $finalRow;
             }
 
-            // 5. Crear y guardar Excel en el servidor
+            // Crear y guardar Excel en el servidor
             $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
             $sheet->setTitle('Reporte');
@@ -228,7 +230,7 @@ class report_donwloader
             header('Content-Length: ' . filesize($tmp));
             readfile($tmp);
             unlink($tmp);
-            
+
             // Log
             try {
                 $toinsert = new stdClass;

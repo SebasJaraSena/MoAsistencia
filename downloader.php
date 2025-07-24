@@ -35,8 +35,15 @@ $cumulous = $_GET['cumulous'];
 $studentstatus = $_GET['studentstatus'] ?? '';
 $search = trim($_GET['search'] ?? '');
 $attendancefilter = $_GET['attendancefilter'] ?? '';
+$teacherid = $_GET['teacherid'] ?? '';
+$selected_sessionid = $_GET['sessionid'] ?? '';
 
 
+// Si hay filtro por instructor, solo mostrar sus asistencias (como si fuera "mi asistencia")
+if (!empty($teacherid) && $cumulous == 1) {
+    $cumulous = 0; // Cambia a modo 'personal'
+    $userid = $teacherid; // El usuario a filtrar es el instructor seleccionado
+}
 
 // Obtener el URL de los datos
 $urldata = $_GET['urldata'] ?? null;
@@ -55,7 +62,7 @@ $attendancehistory = json_decode(json_encode($DB->get_records('local_asistencia_
 // Obtener el nombre corto del curso
 $shortname = json_decode(json_encode($DB->get_record('course', ['id' => $courseid], 'shortname')), true)['shortname'];
 // Obtener el resultado de la asistencia
-$result = local_asistencia_external::fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid);
+$result = local_asistencia_external::fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid, $selected_sessionid);
 // Obtener el contexto del sistema
 $contextid = context_course::instance($courseid)->id;
 // Obtener los datos de los estudiantes

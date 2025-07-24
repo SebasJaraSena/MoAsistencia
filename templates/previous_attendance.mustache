@@ -42,7 +42,7 @@ Example context (json):
     <div class="row attendance-row">
 
         <div class="col-md-auto">
-            <form action="./previous_attendance.php?courseid={{courseid}}&page={{currentpage}}&info=h&range={{range}}"
+            <form action="./previous_attendance.php?courseid={{courseid}}&page={{currentpage}}&info=h&range={{range}}&sessionid={{sessionid}}"
                 method="POST">
                 <select class="custom-select" id="weekselect" name="numweeks">
                     <option value="1" {{#1week}}selected{{/1week}}>1 Semana</option>
@@ -54,6 +54,20 @@ Example context (json):
             </form>
         </div>
     </div>
+    {{! Selector de sesiones y botón nueva sesión }}
+    <form method="get" action="/{{dirroot}}/local/asistencia/previous_attendance.php" class="mb-3">
+        <input type="hidden" name="courseid" value="{{courseid}}">
+        <input type="hidden" name="page" value="{{currentpage}}">
+        <input type="hidden" name="search" value="{{search}}">
+        <select name="sessionid" class="form-control w-auto d-inline-block" onchange="this.form.submit()">
+            {{#sessions}}
+                <option value="{{id}}" {{#selected}}selected{{/selected}}>Sesión {{id}}</option>
+            {{/sessions}}
+        </select>
+        <button type="button" class="btn btn-success ml-2" onclick="window.location.href='{{{newsessionurl}}}'">
+            <i class="fa fa-plus"></i> Nueva sesión
+        </button>
+    </form>
 </div>
 
 <br>
@@ -62,6 +76,7 @@ Example context (json):
         class="d-flex align-items-center mb-3" style="gap: 10px;">
         <input type="hidden" name="courseid" value="{{courseid}}">
         <input type="hidden" name="page" value="1">
+        <input type="hidden" name="sessionid" value="{{sessionid}}">
         <input type="text" name="search" class="form-control"
             placeholder="Buscar por nombre, apellido, documento o email..." value="{{search}}">
 
@@ -80,6 +95,7 @@ Example context (json):
 
     <form action="./previous_attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}&weeks={{weeks}}"
         method="POST" id="course_{{courseid}}">
+        <input type="hidden" name="sessionid" value="{{sessionid}}">
         <div class="container">
 
 
@@ -88,7 +104,7 @@ Example context (json):
                 <input type="hidden" id="teacher_{{id}}" name="teacherid" value="{{teacherid}}">
                 <input type="hidden" name="numweeks" value="{{weeks}}">
                 <input type="hidden" name="page" value="{{page}}">
-
+                <input type="hidden" name="sessionid" value="{{sessionid}}">
                 <table class="table table-hover table-container" id="attendance-table">
                     <thead>
                         <tr>

@@ -56,6 +56,7 @@ if (
     $rcourseid = $_POST['courseid'];
     $teacherid = $_POST['teacherid'];
     $attendancepage = isset($_POST['page']) ? (int) trim($_POST['page']) : 1;
+    $sessionid = isset($_POST['sessionid']) ? (int)$_POST['sessionid'] : (isset($_GET['sessionid']) ? (int)$_GET['sessionid'] : 1);
 
     // Recorrer los datos del formulario
     foreach ($attendances as $studentid => $days) {
@@ -119,7 +120,8 @@ if (
     foreach ($por_estudiante as $studentid => $records) {
         $result = $DB->get_record('local_asistencia_permanente', [
             'course_id' => $rcourseid,
-            'student_id' => $studentid
+            'student_id' => $studentid,
+            'session_id' => $sessionid
         ]);
         // Verificar si el registro existe
         if ($result) {
@@ -143,6 +145,7 @@ if (
             $nuevo = new stdClass();
             $nuevo->course_id = $rcourseid;
             $nuevo->student_id = $studentid;
+            $nuevo->session_id = $sessionid;
             $nuevo->full_attendance = json_encode(array_values($records));
             $DB->insert_record('local_asistencia_permanente', $nuevo);
         }
@@ -179,6 +182,7 @@ if (!$DB->record_exists('course', ['id' => $courseid])) {
 // Obtener los datos del formulario
 $attendancepage = $_POST['page'] ?? $_GET['page'] ?? 1;
 $range = $_POST['range'] ?? $_GET['range'] ?? 0;
+$sessionid = isset($_POST['sessionid']) ? (int)$_POST['sessionid'] : (isset($_GET['sessionid']) ? (int)$_GET['sessionid'] : 1);
 // Crear la caché
 $cache = cache::make('local_asistencia', 'coursestudentslist');
 $userid = $USER->id;
@@ -198,7 +202,7 @@ $endweek = clone $date;
 $initial = $date->format('l') == 'Monday' ? $startweek->modify("-$weeks week")->format("Y-m-d") : $startweek->modify("-$weeks week")->modify("last monday")->format("Y-m-d");
 $final = $date->format('l') == 'Sunday' ? $endweek->modify("-$weeks week")->format("Y-m-d") : $endweek->modify("-$weeks week")->modify("next sunday")->format("Y-m-d");
 // Cerrar la validación de retardos
-$close = local_asistencia_external::close_validation_retard($courseid, $initial, $final);
+$close = local_asistencia_external::close_validation_retard($courseid, $initial, $final, $sessionid);
 // Obtener el contexto del curso
 $context = context_course::instance($courseid);
 // Obtener los parámetros
@@ -293,9 +297,10 @@ function studentsFormatWeek(
             ) ?: [];
             // Filtrar los datos de asistencia
             $records = array_filter($jsonattendance, function ($item) use ($initial, $final, $userid) {
-                return $item['DATE'] >= $initial
-                    && $item['DATE'] <= $final
-                    && $item['TEACHER_ID'] == $userid;
+                return (!isset($item['SESSION_ID'])) &&
+                    ($item['DATE'] >= $initial) &&
+                    ($item['DATE'] <= $final) &&
+                    ($item['TEACHER_ID'] == $userid);
             });
             // Recorrer los datos de asistencia
             foreach ($records as $record) {
@@ -381,8 +386,8 @@ function getWeekRange($initial): array
 // Se obtiene información guardada en caché
 // Obtener la información de asistencia
 $attendance_info = [];
-// Obtener el histórico de asistencia
-$historyattendance = $DB->get_records('local_asistencia_permanente', ['course_id' => $courseid]);
+// Obtener el histórico de asistencia SOLO de la sesión seleccionada
+$historyattendance = $DB->get_records('local_asistencia_permanente', ['course_id' => $courseid, 'session_id' => $sessionid]);
 // Guardar el histórico en la caché
 $cache->set("H_$courseid", json_encode($historyattendance));
 $cachehistoryattendance = json_decode($cache->get("H_$courseid"), true);
@@ -497,8 +502,8 @@ for ($page = 1; $page <= $pages_attendance_array['pages']; $page++) {
 // Obtener el rango de días
 $range = isset($_GET['range']) ? $_GET['range'] : 0;
 [$initialdate, $finaldate] = [$weekRange[0]['fulldate'], $weekRange[6]['fulldate']];
-// Obtener las asistencias temporales
-$sql = "SELECT * FROM {local_asistencia} WHERE courseid = $courseid AND teacherid = $userid AND \"date\" BETWEEN '$initialdate' AND '$finaldate'";
+// Obtener las asistencias temporales SOLO de la sesión seleccionada
+$sql = "SELECT * FROM {local_asistencia} WHERE courseid = $courseid AND teacherid = $userid AND sessionid = $sessionid AND \"date\" BETWEEN '$initialdate' AND '$finaldate'";
 $temporalattendance = array_values($DB->get_records_sql($sql));
 // Formatear los datos de asistencia
 [$students, $totaldaysattendance, $a] = studentsFormatWeek($studentslist[$attendancepage] ?? $pages_attendance_array_copy[$attendancepage], $weekRange, $cachehistoryattendance, $temporalattendance, $userid, $initial, $final, $a, count($supended), $close, $courseid);
@@ -509,6 +514,33 @@ $cache->set('attendancelist' . $courseid, json_encode($studentslist));
 // Obtener los datos de asistencia
 $studentsstring = $cache->get('attendancelist' . $courseid);
 $students = json_decode($studentsstring, true);
+// Selector de sesiones y botón nueva sesión
+$sessions_array = [];
+$newsessionurl = null;
+if (!empty($courseid)) {
+    $sessions = $DB->get_records_sql("\n        SELECT DISTINCT session_id\n        FROM {local_asistencia_permanente}\n        WHERE course_id = ?\n        ORDER BY session_id ASC\n    ", [$courseid]);
+    foreach ($sessions as $sess) {
+        $sessions_array[] = [
+            'id' => $sess->session_id,
+            'selected' => ($sess->session_id == $sessionid)
+        ];
+    }
+    $sessionids = array_column($sessions_array, 'id');
+    if (!in_array($sessionid, $sessionids)) {
+        $sessions_array[] = [
+            'id' => $sessionid,
+            'selected' => true
+        ];
+    }
+    $maxsession = $DB->get_field_sql("\n        SELECT MAX(session_id) FROM {local_asistencia_permanente}\n        WHERE course_id = ?\n    ", [$courseid]);
+    $nextsessionid = $maxsession ? ($maxsession + 1) : 2;
+    $newsessionurl = new moodle_url('/local/asistencia/previous_attendance.php', [
+        'courseid' => $courseid,
+        'sessionid' => $nextsessionid,
+        'page' => 1,
+        'range' => $range
+    ]);
+}
 $templatecontext = (object) [
     'students' => $students[$attendancepage],
     'courseid' => $courseid,
@@ -535,6 +567,9 @@ $templatecontext = (object) [
     'excusa' => "Inasistencia programada",
     'page' => $attendancepage,
     'search' => $search,
+    'sessions' => $sessions_array,
+    'sessionid' => $sessionid,
+    'newsessionurl' => $newsessionurl ? $newsessionurl->out() : '',
 ];
 // Renderizar la página                 
 echo $OUTPUT->render_from_template('local_asistencia/previous_attendance', $templatecontext);

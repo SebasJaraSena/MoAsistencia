@@ -41,5 +41,6 @@
  $string['menuasistencia']      = 'Menú asistencia';
  $string['asistencia_general']  = 'Asistencia general';
  $string['asistencia_anterior']  = 'Asistencia anterior';
+ $string['asistencia_sesiones']  = 'Asistencia sesiones';
  $string['historial']  = 'Histórico';
  $string['logs_descarga']  = 'Logs de descarga';

@@ -79,6 +79,8 @@ define(['jquery'], function ($) {
                     checkAllHours();
                 } else if (view === 'previous_attendance') {
                     checkAllHours2();
+                } else if (view === 'attendance_sesiones') {
+                    checkAllHours();
                 }
             }
             // Verificar si hay errores en las celdas de la tabla

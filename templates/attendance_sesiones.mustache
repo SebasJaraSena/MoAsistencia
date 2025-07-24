@@ -39,46 +39,60 @@ Example context (json):
     </div>
 </div>
 
-
-
-
 <div class="container ">
 
-<div class="col align-self-end">
-      <div class="position-relative d-inline mb-3"
-        onclick="location.href='/{{dirroot}}/local/asistencia/attendance_sesiones.php?courseid={{courseid}}&page=1'"
-        style="cursor: pointer;">
-        <button class="btn btn-custom btn-small">
-          Crear sesión
-        </button>
-        <span class="icon-circle-overlap">
-          <i class="fa-solid fa-list-check"></i>
-        </span>
-      </div>
-    </div>
     <br>
     <div class="my-2">
-    
-    {{! Formulario para busqueda }}
-    <form method="get" action="/{{dirroot}}/local/asistencia/attendance.php" class="d-flex align-items-center mb-3"
-        style="gap: 10px;">
-        <input type="hidden" name="courseid" value="{{courseid}}">
-        <input type="hidden" name="limit" value="25">
-        <input type="hidden" name="page" value="1">
-        <input type="text" name="search" class="form-control" value="{{search}}"
-            placeholder="Buscar por documento, apellidos, nombres o correo">
-        <button type="submit" class="btn btn-primary">Buscar</button>
-        {{#search}}
-        <a href="/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page=1" class="btn btn-secondary">
-            Limpiar</a>
-        {{/search}}
-    </form>
+        <form method="get" id="datePickerForm" action="/{{dirroot}}/local/asistencia/attendance_sesiones.php"
+            class="d-flex align-items-center mb-3" style="gap: 10px;">
+            <input type="hidden" name="courseid" value="{{courseid}}">
+            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="search" value="{{search}}">
+
+            <label for="date">Seleccionar fecha:</label>
+            <input type="date" name="date" id="date" class="form-control" value="{{fulldate}}">
+
+        </form>
+        {{! Formulario para busqueda }}
+        <form method="get" action="/{{dirroot}}/local/asistencia/attendance_sesiones.php"
+            class="d-flex align-items-center mb-3" style="gap: 10px;">
+            <input type="hidden" name="courseid" value="{{courseid}}">
+            <input type="hidden" name="limit" value="25">
+            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="sessionid" value="{{sessionid}}">
+            <input type="hidden" name="date" value="{{weekheader.0.fulldate}}">
+            <input type="text" name="search" class="form-control" value="{{search}}"
+                placeholder="Buscar por documento, apellidos, nombres o correo">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+            {{#search}}
+            <a href="/{{dirroot}}/local/asistencia/attendance_sesiones.php?courseid={{courseid}}&date={{weekheader.0.fulldate}}&sessionid={{sessionid}}&page=1"
+                class="btn btn-secondary">
+                Limpiar</a>
+
+            {{/search}}
+        </form>
     </div>
     {{! Formulario de las asistencias}}
-    <form action="./attendance.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}" method="POST"
+    <form action="./attendance_sesiones.php?courseid={{courseid}}&range={{range}}&page={{currentpage}}" method="POST"
         id="course_{{courseid}}">
+        <input type="hidden" id="sessionid" name="sessionid" value="{{sessionid}}">
+
+        <div class="mb-2">
+            <label for="sessionid">Selecciona sesión:</label>
+            <select id="sessionidSelect" class="form-control" style="width:auto;display:inline-block;">
+
+                {{#sessions_list}}
+                <option value="{{id}}" {{#is_selected}}selected{{/is_selected}}>{{sessionname}}</option>
+                {{/sessions_list}}
+            </select>
+            <a href="?courseid={{courseid}}&date={{weekheader.0.fulldate}}&newsession=1&page={{currentpage}}"
+                class="btn btn-sm btn-success ml-2">Crear nueva sesión</a>
+        </div>
+        {{#sessionname}}
+        <div class="alert alert-info mb-2">Sesión actual: {{sessionname}}</div>
+        {{/sessionname}}
         {{#weekheader}}
-        <input type="hidden" name="date[]" value="{{fulldate}}">
+        <input type="hidden" name="date" value="{{fulldate}}">
         {{/weekheader}}
         <div class="container">
 
@@ -125,7 +139,8 @@ Example context (json):
                             {{#week}}
                             <td class="select-container column-table">
                                 <input type="hidden" name="userids[]" value="{{id}}">
-                                <input type="hidden" name="date[]" value="{{fulldate}}">
+                                <input type="hidden" name="date" value="{{fulldate}}">
+
 
                                 {{#locked}}
                                 <select class="custom-select form-select-h" disabled>
@@ -157,7 +172,8 @@ Example context (json):
                                 {{/closed}}
 
                                 {{^closed}}
-                                <select name="attendance[{{id}}][{{fulldate}}]" class="custom-select form-select">
+                                <select name="attendance[{{id}}][{{fulldate}}]" class="custom-select form-select"
+                                    {{^has_sessions}}disabled{{/has_sessions}}>
                                     <option value="-8" {{#selection.op-8}}selected{{/selection.op-8}}>-</option>
                                     <option value="1" {{#selection.op1}}selected{{/selection.op1}} title="Asistió">A
                                     </option>
@@ -174,10 +190,10 @@ Example context (json):
                                 <div class="input-container">
                                     <input type="number" name="extrainfoNum[{{id}}][{{fulldate}}]"
                                         class="form-control extra-input" placeholder="Horas" min="1" max="10" step="1"
-                                        value="{{missedhours}}">
+                                        value="{{missedhours}}" {{^has_sessions}}readonly{{/has_sessions}}>
                                     <textarea name="extrainfo[{{id}}][{{fulldate}}]" class="form-control extra-input"
-                                        placeholder="Observaciones"
-                                        style="width: 100%; height: 40px;">{{observations}}</textarea>
+                                        placeholder="Observaciones" style="width: 100%; height: 40px;"
+                                        {{^has_sessions}}readonly{{/has_sessions}}>{{observations}}</textarea>
                                 </div>
                                 {{/closed}}
                                 {{/locked}}
@@ -216,23 +232,23 @@ Example context (json):
                 <br>
                 <div class="container">
                     {{#listpages}}
-    {{#current}}
-        <button type="button" class="btn btn-secondary" disabled>{{page}}</button>
-    {{/current}}
+                    {{#current}}
+                    <button type="button" class="btn btn-secondary" disabled>{{page}}</button>
+                    {{/current}}
 
-    {{^current}}
-        {{#active}}
-            <button type="button" class="btn btn-light" disabled>{{page}}</button>
-        {{/active}}
+                    {{^current}}
+                    {{#active}}
+                    <button type="button" class="btn btn-light" disabled>{{page}}</button>
+                    {{/active}}
 
-        {{^active}}
-            <button type="button" class="btn btn-primary pagelink"
-                data-url="/{{dirroot}}/local/asistencia/attendance.php?courseid={{courseid}}&page={{page}}">
-                {{page}}
-            </button>
-        {{/active}}
-    {{/current}}
-{{/listpages}}
+                    {{^active}}
+                    <button type="button" class="btn btn-primary pagelink"
+                        data-url="/{{dirroot}}/local/asistencia/attendance_sesiones.php?courseid={{courseid}}&page={{page}}">
+                        {{page}}
+                    </button>
+                    {{/active}}
+                    {{/current}}
+                    {{/listpages}}
 
                 </div>
             </div>
@@ -286,3 +302,21 @@ Example context (json):
             </div>
     </form>
 </div>
+<script>
+    document.getElementById('date').addEventListener('change', function () {
+        document.getElementById('datePickerForm').submit();
+    });
+
+    document.getElementById('sessionidSelect').addEventListener('change', function () {
+        const selectedSessionId = this.value;
+        const courseid = "{{courseid}}";
+        const date = "{{weekheader.0.fulldate}}";
+        const page = "{{currentpage}}";
+        const search = "{{search}}";
+
+        // Redirigir con la sesión correcta
+        const url = `/{{dirroot}}/local/asistencia/attendance_sesiones.php?courseid=${courseid}&date=${date}&sessionid=${selectedSessionId}&page=${page}&search=${encodeURIComponent(search)}`;
+
+        window.location.href = url;
+    });
+</script>

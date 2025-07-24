@@ -39,7 +39,7 @@ $userid = $USER->id;
 $attendancepage = $_GET['page'] ?? 1;
 $courseid = $_GET['courseid'];
 $limit = $_GET['limit'] ?? 1;
-
+$selected_sessionid = $_GET['sessionid'] ?? '';
 $context = context_course::instance($courseid);
 
 $params = [
@@ -50,6 +50,7 @@ $params = [
     'final' => $_GET['final'] ?? null,
     'range' => $_GET['range'] ?? null
 ];
+
 
 // Parámetros y URL actual
 $currenturl = new moodle_url('/local/asistencia/history.php', array_filter($params));
@@ -77,7 +78,7 @@ $PAGE->requires->css(new moodle_url('/local/asistencia/styles/styles.css', array
 
 
 // Functions
-function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $userid, $dbtablefieldname, $initialdate, $finaldate, $comulus = 1)
+function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $userid, $dbtablefieldname, $initialdate, $finaldate, $comulus = 1, $sessionid = null)
 { // Función que formatea la información historica de asistencia por aprendiz en un rango de fechas [x-y]
     $dateaux = date_create($initialdate);
     for ($i = 0; $i < count($studentslist); $i++) {
@@ -109,9 +110,23 @@ function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $us
             }
 
             if ($comulus) {
-                $filtereddates = !empty($jsonattendance) ? array_filter($jsonattendance, function ($item) use ($initialdate, $finaldate) { // Se filtran las asistencias que están dentro del rango de fechas
-                    return ($item['DATE'] >= $initialdate) && ($item['DATE'] <= $finaldate);
+                /* $filtereddates = !empty($jsonattendance) ? array_filter($jsonattendance, function ($item) use ($initialdate, $finaldate) {
+                    return (!isset($item['SESSION_ID'])) &&
+                        ($item['DATE'] >= $initialdate) &&
+                        ($item['DATE'] <= $finaldate);
+                }) : []; */
+                $filtereddates = !empty($jsonattendance) ? array_filter($jsonattendance, function ($item) use ($initialdate, $finaldate, $sessionid) {
+                    $inRange = ($item['DATE'] >= $initialdate) && ($item['DATE'] <= $finaldate);
+
+                    if ($sessionid) {
+                        return $inRange && isset($item['SESSION_ID']) && $item['SESSION_ID'] == $sessionid;
+                    } else {
+                        return $inRange && !isset($item['SESSION_ID']);
+                    }
                 }) : [];
+
+
+
                 foreach ($filtereddates as $ja) { // Se recorre cada uno de los datos previamente filtrados
                     $jadate = DateTime::createFromFormat('Y-m-d', $ja["DATE"]);
                     $index = $jadate->diff($dateaux)->days;
@@ -130,9 +145,19 @@ function studentsFormatMonth($studentslist, $month, $cachehistoryattendance, $us
 
                 }
             } else {
-                $filteredteacher = !empty($jsonattendance) ? array_filter($jsonattendance, function ($item) use ($userid, $initialdate, $finaldate) { // Se filtran las asistencias relacionadas al instructor que está visualizando los históricos
-                    return ($item['TEACHER_ID'] == $userid) && ($item['DATE'] >= $initialdate) && ($item['DATE'] <= $finaldate);
+                $filteredteacher = !empty($jsonattendance) ? array_filter($jsonattendance, function ($item) use ($userid, $initialdate, $finaldate, $sessionid) {
+                    $validUser = $item['TEACHER_ID'] == $userid;
+                    $inRange = ($item['DATE'] >= $initialdate) && ($item['DATE'] <= $finaldate);
+
+                    if ($sessionid) {
+                        return $validUser && $inRange && isset($item['SESSION_ID']) && $item['SESSION_ID'] == $sessionid;
+                    } else {
+                        return $validUser && $inRange && !isset($item['SESSION_ID']);
+                    }
                 }) : [];
+
+
+
 
                 foreach ($filteredteacher as $ja) { // Se recorre cada una de las asistencias previamente filtradas
                     $jadate = DateTime::createFromFormat('Y-m-d', $ja["DATE"]);
@@ -226,7 +251,14 @@ if ($final && isset($_GET['final'])) {
 } else {
     $finaldate->modify('last day of');
 }
-
+if (!empty($selected_sessionid)) {
+    $sessiondata = $DB->get_record('local_asistencia_sesiones', ['id' => $selected_sessionid], '*', IGNORE_MISSING);
+    if ($sessiondata && !empty($sessiondata->date)) {
+        $sessiondate = (new DateTime($sessiondata->date))->format('Y-m-d');
+        $initialdate = new DateTime($sessiondate);
+        $finaldate = new DateTime($sessiondate);
+    }
+}
 // Inicializar variables
 $op = 1;
 $postfilter;
@@ -363,12 +395,18 @@ if (isset($pages_attendance_string)) {
         });
     }
 
-    $comulus = isset($_GET['range']) ? intval($_GET['range']) : 0; 
+    $comulus = isset($_GET['range']) ? intval($_GET['range']) : 0;
 
+    // Debug: log selected_teacher antes del filtro
+    
+
+    $selected_teacher = $_GET['teacherid'] ?? '';
+    
     // Filtrado por tipo de asistencia
     $attendancefilter = $_GET['attendancefilter'] ?? null;
+    $sessionid = $_GET['sessionid'] ?? '';
     if ($attendancefilter !== null && $attendancefilter !== '') {
-        $studentslist = array_filter($studentslist, function ($student) use ($attendancefilter, $cachehistoryattendance, $dbtablefieldname, $initialdate, $finaldate, $userid, $comulus) {
+        $studentslist = array_filter($studentslist, function ($student) use ($attendancefilter, $cachehistoryattendance, $dbtablefieldname, $initialdate, $finaldate, $userid, $comulus, $sessionid, $selected_teacher) {
             $studentid = $student['id'];
             $filtered = !empty($cachehistoryattendance) ? array_filter($cachehistoryattendance, function ($item) use ($studentid) {
                 return $item['student_id'] == $studentid;
@@ -400,17 +438,57 @@ if (isset($pages_attendance_string)) {
 
             if ($comulus == 0) { // Personal: SOLO asistencias tomadas por el instructor actual
                 foreach ($filtereddates as $attendance) {
-                    if (
-                        isset($attendance['TEACHER_ID']) && $attendance['TEACHER_ID'] == $userid &&
-                        isset($attendance['ATTENDANCE']) && (string) $attendance['ATTENDANCE'] === (string) $attendancefilter
-                    ) {
-                        return true;
+                    // Si hay filtro de sesión, solo considerar las de esa sesión
+                    if (!empty($sessionid)) {
+                        if (
+                            isset($attendance['TEACHER_ID']) && $attendance['TEACHER_ID'] == $userid &&
+                            isset($attendance['SESSION_ID']) && $attendance['SESSION_ID'] == $sessionid &&
+                            isset($attendance['ATTENDANCE']) && (string) $attendance['ATTENDANCE'] === (string) $attendancefilter
+                        ) {
+                            return true;
+                        }
+                    } else {
+                        // Si NO hay filtro de sesión, solo considerar las asistencias generales (sin SESSION_ID)
+                        if (
+                            isset($attendance['TEACHER_ID']) && $attendance['TEACHER_ID'] == $userid &&
+                            (!isset($attendance['SESSION_ID']) || $attendance['SESSION_ID'] === '' || $attendance['SESSION_ID'] === null) &&
+                            isset($attendance['ATTENDANCE']) && (string) $attendance['ATTENDANCE'] === (string) $attendancefilter
+                        ) {
+                            return true;
+                        }
                     }
                 }
+                // Si ningún registro cumple, NO lo muestres
+                return false;
             } else { // Consolidado: buscar en todas las asistencias
                 foreach ($filtereddates as $attendance) {
-                    if (isset($attendance['ATTENDANCE']) && (string) $attendance['ATTENDANCE'] === (string) $attendancefilter) {
-                        return true;
+                    // Validar instructor solo si hay uno seleccionado
+                    if (!empty($selected_teacher)) {
+                        if (!isset($attendance['TEACHER_ID']) || $attendance['TEACHER_ID'] != $selected_teacher) {
+                            continue; // Omitir si no es del instructor seleccionado
+                        }
+                    }
+
+                    // Si se aplica filtro por sesión
+                    if (!empty($sessionid)) {
+                        if (
+                            isset($attendance['SESSION_ID']) && $attendance['SESSION_ID'] == $sessionid &&
+                            isset($attendance['ATTENDANCE']) && (string) $attendance['ATTENDANCE'] === (string) $attendancefilter
+                        ) {
+                            return true;
+                        }
+                    } else {
+                        // General sin sesión específica
+                        if (
+                            (!isset($attendance['SESSION_ID']) || $attendance['SESSION_ID'] === '' || $attendance['SESSION_ID'] === null) &&
+                            isset($attendance['ATTENDANCE']) && (string) $attendance['ATTENDANCE'] === (string) $attendancefilter &&
+                            (
+                                empty($selected_teacher) ||
+                                (isset($attendance['TEACHER_ID']) && $attendance['TEACHER_ID'] == $selected_teacher)
+                            )
+                        ) {
+                            return true;
+                        }
                     }
                 }
             }
@@ -482,15 +560,23 @@ for ($page = 1; $page <= $pages_attendance_array['pages']; $page++) { // Paginad
 // Obtener los datos de asistencia
 /* $comulus = isset($_GET['range']) ? intval($_GET['range']) : 0; */
 $temporalattendance = array_values($DB->get_records('local_asistencia', ['courseid' => $courseid]));
+// Si hay filtro por instructor, mostrar solo sus asistencias (como si fuera "mi asistencia")
+$comulus_for_render = $comulus;
+$userid_for_render = $userid;
+if ($comulus == 1 && !empty($selected_teacher)) {
+    $comulus_for_render = 0;
+    $userid_for_render = $selected_teacher;
+}
 $students = studentsFormatMonth(
     $pagedstudents,
     $monthrange,
     $cachehistoryattendance,
-    $userid,
+    $userid_for_render,
     $dbtablefieldname,
     $initialdate->format('Y-m-d'),
     $finaldate->format('Y-m-d'),
-    $comulus
+    $comulus_for_render,
+    $selected_sessionid
 );
 $filtroFecha = $filter_method;
 // Obtener los datos de asistencia
@@ -503,6 +589,102 @@ $studentsstring = $cache->get('attendancelist' . $courseid);
 $students = json_decode($studentsstring, true);
 // Variables para el filtro de asistencia
 $attendancefilter = $_GET['attendancefilter'] ?? '';
+
+// Obtener instructores disponibles para el filtro (solo en consolidado)
+$available_teachers = [];
+if ($comulus == 1 && !empty($cachehistoryattendance)) {
+    $teacher_ids = [];
+    foreach ($cachehistoryattendance as $record) {
+        if (!empty($record[$dbtablefieldname])) {
+            $jsonattendance = json_decode($record[$dbtablefieldname], true);
+            if (!empty($jsonattendance)) {
+                foreach ($jsonattendance as $att) {
+                    // Solo dentro del rango de fechas
+                    if (
+                        isset($att['TEACHER_ID']) &&
+                        $att['DATE'] >= $initialdate->format('Y-m-d') &&
+                        $att['DATE'] <= $finaldate->format('Y-m-d')
+                    ) {
+                        $teacher_ids[] = $att['TEACHER_ID'];
+                    }
+                }
+            }
+        }
+    }
+    $teacher_ids = array_unique($teacher_ids);
+    // Obtener nombres de los instructores
+    foreach ($teacher_ids as $tid) {
+        $user = $DB->get_record('user', ['id' => $tid], 'id, firstname, lastname');
+        if ($user) {
+            $available_teachers[] = [
+                'id' => $user->id,
+                'name' => fullname($user),
+                'selected' => ($selected_teacher == $user->id) ? 'selected' : ''
+            ];
+        }
+    }
+
+}
+
+
+$available_sessions = [];
+
+if (!empty($selected_teacher)) {
+    $sessions = $DB->get_records('local_asistencia_sesiones', [
+        'courseid' => $courseid,
+        'teacherid' => $selected_teacher
+    ], 'date ASC');
+
+    foreach ($sessions as $session) {
+        $available_sessions[] = [
+            'id' => $session->id,
+            'name' => $session->sessionname,
+            'selected' => ($selected_sessionid == $session->id) ? 'selected' : ''
+        ];
+    }
+}
+
+if ($comulus == 1 && !empty($selected_teacher)) {
+    $studentslist = array_filter($studentslist, function ($student) use ($cachehistoryattendance, $dbtablefieldname, $initialdate, $finaldate, $selected_teacher) {
+        $student = (array) $student;
+        if (!isset($student['id'])) {
+            return false;
+        }
+        $studentid = $student['id'];
+
+        $filtered = !empty($cachehistoryattendance) ? array_filter($cachehistoryattendance, function ($item) use ($studentid) {
+            return $item['student_id'] == $studentid;
+        }) : [];
+        if (empty($filtered)) {
+            return false;
+        }
+        $firstKey = array_key_first($filtered);
+        if ($firstKey === null || !isset($cachehistoryattendance[$firstKey][$dbtablefieldname])) {
+            return false;
+        }
+        $jsonStr = $cachehistoryattendance[$firstKey][$dbtablefieldname];
+        if (empty($jsonStr)) {
+            return false;
+        }
+        $jsonattendance = json_decode($jsonStr, true);
+        if (empty($jsonattendance)) {
+            return false;
+        }
+        // Filtrar por rango de fechas y por instructor
+        foreach ($jsonattendance as $attendance) {
+            if (
+                isset($attendance['TEACHER_ID']) &&
+                $attendance['TEACHER_ID'] == $selected_teacher &&
+                $attendance['DATE'] >= $initialdate->format('Y-m-d') &&
+                $attendance['DATE'] <= $finaldate->format('Y-m-d')
+            ) {
+                return true;
+            }
+        }
+        return false;
+    });
+}
+
 $templatecontext = (object) [
     'students' => $students[$attendancepage],
     'courseid' => $courseid,
@@ -535,6 +717,12 @@ $templatecontext = (object) [
     'isattendance1' => $attendancefilter === '1',
     'isattendance2' => $attendancefilter === '2',
     'isattendance3' => $attendancefilter === '3',
+    'available_teachers' => $available_teachers,
+    'selected_teacher' => $selected_teacher,
+    'show_teacher_filter' => ($comulus == 1 && count($available_teachers) > 0),
+    'selected_sessionid' => $selected_sessionid,
+    'available_sessions' => $available_sessions,
+    'show_session_filter' => !empty($available_sessions),
 ];
 
 echo $OUTPUT->render_from_template('local_asistencia/history', $templatecontext);

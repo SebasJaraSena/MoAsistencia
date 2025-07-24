@@ -14,6 +14,8 @@
         <FIELD NAME="date" TYPE="text" LENGTH="15" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="observations" TYPE="text" LENGTH="30" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="amounthours" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="sessionid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1"/>
+
         </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -46,11 +48,26 @@
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
         <FIELD NAME="course_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="student_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+        <FIELD NAME="session_id" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1"/>
         <FIELD NAME="full_attendance" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
     </TABLE>
+    <TABLE NAME="local_asistencia_sesiones" COMMENT="Sesiones de asistencia por curso y fecha">
+    <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" />
+        <FIELD NAME="teacherid" TYPE="int" LENGTH="10" NOTNULL="true" />
+        <FIELD NAME="date" TYPE="date" NOTNULL="true" />
+        <FIELD NAME="createdat" TYPE="int" LENGTH="10" NOTNULL="true" />
+        <FIELD NAME="sessionname" TYPE="char" LENGTH="255" NOTNULL="false" DEFAULT="" />
+    </FIELDS>
+    <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+    </KEYS>
+</TABLE>
+
   </TABLES>
 </XMLDB>

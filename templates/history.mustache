@@ -87,13 +87,13 @@ Example context (json):
         <!-- Botones de descarga a la izquierda -->
         <div class="col-md-auto d-flex gap-2 g-2 my-2">
            <a id="color_btn" class="btn btn-primary" role="button"
-                href="/{{dirroot}}/local/asistencia/downloader.php?courseid={{courseid}}&cumulous={{range}}&initialdate={{initial_value}}&finaldate={{final_value}}&filtro_fecha={{filtro_fecha}}{{#search}}&search={{searchEscaped}}{{/search}}&studentstatus={{studentstatus}}&attendancefilter={{attendancefilter}}">
+                href="/{{dirroot}}/local/asistencia/downloader.php?courseid={{courseid}}&cumulous={{range}}&initialdate={{initial_value}}&finaldate={{final_value}}&filtro_fecha={{filtro_fecha}}{{#search}}&search={{searchEscaped}}{{/search}}&studentstatus={{studentstatus}}&attendancefilter={{attendancefilter}}&teacherid={{selected_teacher}}&sessionid={{selected_sessionid}}">
                 <i class="fa-regular fa-circle-down" style="margin-right:8px;"></i>
                 Descargar reporte
             </a>
 
             <button type="button" class="btn btn-primary mx-2 hidden"
-                onclick="location.href='/{{dirroot}}/local/asistencia/detailed_report_downloader.php?courseid={{courseid}}&cumulous={{range}}&initialdate={{initial_value}}&finaldate={{final_value}}'"
+                onclick="location.href='/{{dirroot}}/local/asistencia/detailed_report_downloader.php?courseid={{courseid}}&cumulous={{range}}&initialdate={{initial_value}}&finaldate={{final_value}}&teacherid={{selected_teacher}}'"
                 id="detailed_donwloader" title="Habilitado para rangos de 7 días o menos.">
                 Descargar reporte semanal
             </button>
@@ -157,6 +157,26 @@ Example context (json):
 <!-- Botón específico para filtrar por tipo de asistencia -->
 <button type="submit" class="btn btn-primary" name="action" value="asistencia">Filtrar asistencia</button>
 
+<!-- Filtro por instructor (solo en consolidado y si hay instructores disponibles) -->
+{{#show_teacher_filter}}
+  <select class="form-control" name="teacherid" id="teacherid">
+    <option value="">Todos los instructores</option>
+    {{#available_teachers}}
+      <option value="{{id}}" {{selected}}>{{name}}</option>
+    {{/available_teachers}}
+  </select>
+  <button type="submit" class="btn btn-primary" name="action" value="filtrar_instructor">Filtrar instructor</button>
+{{/show_teacher_filter}}
+<!-- Filtro por sesión -->
+{{#show_session_filter}}
+  <select class="form-control" name="sessionid" id="sessionid">
+    <option value="">Todas las sesiones</option>
+    {{#available_sessions}}
+      <option value="{{id}}" {{selected}}>{{name}}</option>
+    {{/available_sessions}}
+  </select>
+  <button type="submit" class="btn btn-primary" name="action" value="filtrar_sesion">Filtrar sesión</button>
+{{/show_session_filter}}
 
     <!-- Campo búsqueda -->
     <input type="text" name="search" class="form-control" value="{{search}}" placeholder="Buscar por documento, apellidos,…">
@@ -164,7 +184,6 @@ Example context (json):
     <!-- Boton para busqueda -->
     <button type="submit" class="btn btn-primary" name="action" value="buscar">Buscar</button>
 </form>
-
 
     <div class="fortable" style="width:auto; overflow-x: auto">
         <table class="table table-hover table-container" id="attendance-table">

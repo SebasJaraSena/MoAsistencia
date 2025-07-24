@@ -44,9 +44,9 @@ class local_asistencia_external
     // Función para editar
     public static function edit()
     {
-       /*  return edit::definition(); */
-       $form = new edit();
-       $form->definition(); 
+        /*  return edit::definition(); */
+        $form = new edit();
+        $form->definition();
 
     }
     // Función para ejecutar una consulta
@@ -56,9 +56,9 @@ class local_asistencia_external
         return $thequery->query($query, $params);
     }
     // Función para obtener el reporte de asistencia
-    public static function fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)
+    public static function fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid, $sessionid = '')
     {
-        return fetch_activities::fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid);
+        return fetch_activities::fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid, $sessionid);
     }
     // Función para obtener el reporte de asistencia detallado
     public static function fetch_attendance_report_detailed($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)

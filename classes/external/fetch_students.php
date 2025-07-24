@@ -185,7 +185,7 @@ class fetch_students
     }
 
     // Función para verificar si la asistencia debe estar cerrada o abierta para ser editada
-    public static function close_validation_retard($courseid, $initial, $final)
+   /*  public static function close_validation_retard($courseid, $initial, $final, $sessionid = 1)
     {
         global $USER, $DB;
         $userid = $USER->id;
@@ -193,7 +193,7 @@ class fetch_students
 
         $historyattendance = [];
         try {
-            $historyattendance = $DB->get_record('local_asistencia_permanente', ['course_id' => $courseid]); // Consulta de tabla histórica de base de datos
+            $historyattendance = $DB->get_record('local_asistencia_permanente', ['course_id' => $courseid, 'session_id' => $sessionid]); // Consulta de tabla histórica de base de datos
             $adminrole = $DB->get_record('role_assignments', ['contextid' => $context->id, 'userid' => $userid], 'roleid');
             $admin = $adminrole ? $adminrole->roleid != 5 : $adminrole;
         } catch (\Throwable $th) {
@@ -212,5 +212,40 @@ class fetch_students
         // Retorna  si el usuario puede editar o no
         return !empty($admin) && (count($filtered) < 7) ? 0 : 1;
 
+    } */
+   public static function close_validation_retard($courseid, $initial, $final, $sessionid = 1)
+{
+    global $USER, $DB;
+    $userid = $USER->id;
+    $context = context_course::instance($courseid);
+
+    // ⚠️ Cambiado: get_record → get_records
+    $records = $DB->get_records('local_asistencia_permanente', [
+        'course_id' => $courseid,
+        'session_id' => $sessionid
+    ]);
+    $historyattendance = reset($records); // toma el primero (si hay)
+
+    try {
+        $adminrole = $DB->get_record('role_assignments', [
+            'contextid' => $context->id,
+            'userid' => $userid
+        ], 'roleid');
+        $admin = $adminrole ? $adminrole->roleid != 5 : $adminrole;
+    } catch (\Throwable $th) {
+        //throw $th;
     }
+
+    $attendacearray = [];
+    if ($admin && isset($historyattendance) && isset($historyattendance->full_attendance)) {
+        $attendacearray = json_decode($historyattendance->full_attendance, true) ?? [];
+    }
+
+    $filtered = !empty($attendacearray) ? array_filter($attendacearray, function ($item) use ($userid, $initial, $final) {
+        return $item['TEACHER_ID'] == $userid && $item['DATE'] >= $initial && $item['DATE'] <= $final;
+    }) : [];
+
+    return !empty($admin) && (count($filtered) < 7) ? 0 : 1;
+}
+
 }

@@ -29,56 +29,84 @@ require_once("$CFG->libdir/externallib.php");
 class fetch_activities
 {
     // Función para obtener el reporte de asistencia
-   public static function fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)
-{
-    global $DB;
+    public static function fetch_attendance_report($attendancehistory, $initialdate, $finaldate, $cumulous, $userid, $sessionid = '')
+    {
+        global $DB;
 
-    $studentsinfo = [];
-    $arrayopts = ['-1' => "SUSPENDIDO", 0 => "INCUMPLIMIENTO_INJUSTIFICADO", 1 => "ASISTIÓ", 2 => "INASISTENCIA_NO_PROGRAMADA", 3 => "INASISTENCIA_PROGRAMADA", '-8' => "NA"];
+        $studentsinfo = [];
 
-    foreach ($attendancehistory as $index => $ah) {
-        $id = $ah['student_id'];
-        $studentsinfo[$index] = json_decode(json_encode($DB->get_record('user', ['id' => $id], 'username, lastname, firstname, email, phone1')), true);
+        $arrayopts = ['-1' => "SUSPENDIDO", 0 => "INCUMPLIMIENTO_INJUSTIFICADO", 1 => "ASISTIÓ", 2 => "INASISTENCIA_NO_PROGRAMADA", 3 => "INASISTENCIA_PROGRAMADA", '-8' => "NA"];
 
-        $attendancearray = json_decode($ah['full_attendance'], true);
+        foreach ($attendancehistory as $index => $ah) {
+            $id = $ah['student_id'];
+            $studentsinfo[$index] = json_decode(json_encode($DB->get_record('user', ['id' => $id], 'username, lastname, firstname, email, phone1')), true);
 
-        $filtereddates = $cumulous == 1
-            ? array_filter($attendancearray, function ($item) use ($initialdate, $finaldate) {
-                return ($item['DATE'] >= $initialdate) && ($item['DATE'] <= $finaldate);
-            })
-            : array_filter($attendancearray, function ($item) use ($userid, $initialdate, $finaldate) {
-                return ($item['TEACHER_ID'] == $userid) && ($item['DATE'] >= $initialdate) && ($item['DATE'] <= $finaldate);
+            $attendancearray = json_decode($ah['full_attendance'], true);
+
+            $filtereddates = array_filter($attendancearray, function ($item) use ($userid, $initialdate, $finaldate, $cumulous, $sessionid) {
+                $dateMatch = ($item['DATE'] >= $initialdate) && ($item['DATE'] <= $finaldate);
+                $teacherMatch = $cumulous == 1 ? true : ($item['TEACHER_ID'] == $userid);
+
+                if (!empty($sessionid)) {
+                    // Solo registros de la sesión seleccionada
+                    return $dateMatch && $teacherMatch && isset($item['SESSION_ID']) && $item['SESSION_ID'] == $sessionid;
+                } else {
+                    // Solo registros generales (sin SESSION_ID o vacío)
+                    return $dateMatch && $teacherMatch && (!isset($item['SESSION_ID']) || $item['SESSION_ID'] === '' || $item['SESSION_ID'] === null);
+                }
             });
 
-        $observaciones = [];
-        $i = 0;
-        foreach ($filtereddates as $attendanceinfo) {
-            $studentsinfo[$index]["day$i"] = $attendanceinfo['DATE'];
-            $studentsinfo[$index]["state$i"] = $arrayopts[$attendanceinfo['ATTENDANCE']];
-            $studentsinfo[$index]["time$i"] = $attendanceinfo['AMOUNTHOURS'];
-            $studentsinfo[$index]["observation$i"] = $attendanceinfo['OBERVATIONS'] ?? '';
-            $teacherinfo = json_decode(json_encode($DB->get_record('user', ['id' => $attendanceinfo['TEACHER_ID']], 'username, lastname, firstname, email, phone1')), true);
-            $studentsinfo[$index]["teacher$i"] = $teacherinfo['phone1'] . '-' . $teacherinfo['username'] . '-' . $teacherinfo['lastname'] . '-' . $teacherinfo['firstname'] . '-' . $teacherinfo['email'];
+            $observaciones = [];
+            $groupedByDate = [];
 
-            // Extraer observación si existe
-            if (!empty(trim($attendanceinfo['OBERVATIONS'] ?? ''))) {
-                $observaciones[] = trim($attendanceinfo['OBERVATIONS']);
+            // Agrupar por fecha y sesión (permitir múltiples por fecha)
+            foreach ($filtereddates as $entry) {
+                $date = $entry['DATE'];
+                if (!empty($sessionid)) {
+                    if (isset($entry['SESSION_ID']) && $entry['SESSION_ID'] == $sessionid) {
+                        $groupedByDate[] = $entry;
+                    }
+                } else {
+                    if (!isset($entry['SESSION_ID']) || $entry['SESSION_ID'] === '' || $entry['SESSION_ID'] === null) {
+                        $groupedByDate[] = $entry;
+                    }
+                }
+            }
+            // Si no hay datos agrupados, saltar este estudiante
+            if (empty($groupedByDate)) {
+                continue;
             }
 
-            $i++;
+            $i = 0;
+            foreach ($groupedByDate as $attendanceinfo) {
+                if (isset($attendanceinfo['SESSION_ID'])) {
+                    $studentsinfo[$index]["sessionid$i"] = $attendanceinfo['SESSION_ID'];
+                }
+
+                $studentsinfo[$index]["day$i"] = $attendanceinfo['DATE'];
+                $studentsinfo[$index]["state$i"] = $arrayopts[$attendanceinfo['ATTENDANCE']];
+                $studentsinfo[$index]["time$i"] = $attendanceinfo['AMOUNTHOURS'];
+                $studentsinfo[$index]["observation$i"] = $attendanceinfo['OBERVATIONS'] ?? '';
+                $teacherinfo = json_decode(json_encode($DB->get_record('user', ['id' => $attendanceinfo['TEACHER_ID']], 'username, lastname, firstname, email, phone1')), true);
+                $studentsinfo[$index]["teacher$i"] = $teacherinfo['phone1'] . '-' . $teacherinfo['username'] . '-' . $teacherinfo['lastname'] . '-' . $teacherinfo['firstname'] . '-' . $teacherinfo['email'];
+
+                if (!empty(trim($attendanceinfo['OBERVATIONS'] ?? ''))) {
+                    $observaciones[] = trim($attendanceinfo['OBERVATIONS']);
+                }
+
+                $i++;
+            }
+
+            $studentsinfo[$index]['observations'] = implode(' | ', $observaciones);
         }
 
-        // Agregar campo 'observations' al array del estudiante
-        $studentsinfo[$index]['observations'] = implode(' | ', $observaciones);
+        // Ordenar por apellido
+        usort($studentsinfo, function ($a, $b) {
+            return strcmp($a['lastname'], $b['lastname']);
+        });
+
+        return $studentsinfo;
     }
-
-    // Ordenar por apellido
-    usort($studentsinfo, function ($a, $b) {
-        return strcmp($a['lastname'], $b['lastname']);
-    });
-
-    return $studentsinfo;
-}
 
     // Función para obtener el reporte de asistencia detallado
     public static function fetch_attendance_report_detailed($attendancehistory, $initialdate, $finaldate, $cumulous, $userid)
